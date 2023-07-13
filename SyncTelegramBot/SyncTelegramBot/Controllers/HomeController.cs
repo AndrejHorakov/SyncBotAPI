@@ -1,6 +1,4 @@
 using System.Net;
-using System.Reflection;
-using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using SyncTelegramBot.Models.Entities;
 using SyncTelegramBot.Models.HelpModels;
@@ -14,11 +12,13 @@ namespace SyncTelegramBot.Controllers;
 [Route("[controller]")]
 public partial class HomeController : Controller
 {
-    private IUNFClient _unfClient;
+    private readonly IUNFClient _unfClient;
+    private IReceiptRequestHandler _requestHandler;
 
-    public HomeController(IUNFClient unfClient)
+    public HomeController(IUNFClient unfClient, IReceiptRequestHandler requestHandler)
     {
         _unfClient = unfClient;
+        _requestHandler = requestHandler;
     }
     
     [HttpGet]
@@ -57,42 +57,30 @@ public partial class HomeController : Controller
     [Route("Receipt")]
     public async Task<JsonResult> SaveReceipt([FromBody] PostFromBotReceiptModel postReceiptModel)
     {
-        AnswerFromAPI res;
-        var model = new PostReceiptToUNFModel()
-        {
-            Amount = postReceiptModel.Amount,
-            Date = DateTime.Now,
-            OperationType = postReceiptModel.OperationType
-        };
+        var res = new AnswerFromAPI();
+        var model = new PostReceiptToUNFModel();
+        _requestHandler.HandleDefault(model, postReceiptModel.OperationType, postReceiptModel.Amount);
         switch (postReceiptModel.OperationType)
         {
             case "ОтПоставщика":
             {
-                var parsedEntity = postReceiptModel.Contragent.Split(' ');
-                model.Contragent = await _unfClient
-                    .GetGiudFirst($"Catalog_Контрагенты?$filter=Description eq {parsedEntity[0]} and Code eq {parsedEntity[1]}");
-                model.Decryption = new()
-                {
-                    LineNumber = "1",
-                    Contract = await _unfClient.GetGiudFirst(
-                        $"Catalog_ДоговорыКонтрагентов?$filter=Контрагент_Key eq '{model.Contragent}'"),
-                    AmountCount = postReceiptModel.Amount,
-                    AmountPayment = postReceiptModel.Amount
-                };
+                await _requestHandler.HandleContragentAsync(model, _unfClient, model.Contragent!);
+                await _requestHandler.HandleDecryptionContractAsync(model, _unfClient, model.Contragent!);
                 var ans = await _unfClient.PostReceipt(model);
-                if (ans.StatusCode == HttpStatusCode.OK)
-                    res = new()
-                    {
-                        Answer = "Операция прошла успешно!"
-                    };
-                else
-                    res = new()
-                    {
-                        Answer = "Операция была прервана, произошла ошибка!"
-                    };
+                res.Answer = ans!.StatusCode == HttpStatusCode.OK
+                    ? "Операция прошла успешно!"
+                    : "Операция была прервана, произошла ошибка!";
                 break;
             }
             case "РасчетыПоКредитам":
+            {
+                await _requestHandler.HandleCorrespondenceAsync(model, _unfClient, postReceiptModel.Correspondence!);
+                var ans = await _unfClient.PostReceipt(model);
+                res.Answer = ans!.StatusCode == HttpStatusCode.OK
+                    ? "Операция прошла успешно!"
+                    : "Операция была прервана, произошла ошибка!";
+                break;
+            }
             case "ВозвратЗаймаСотрудником":
             case "ПокупкаВалюты":
             case "ПолучениеНаличныхВБанке":
