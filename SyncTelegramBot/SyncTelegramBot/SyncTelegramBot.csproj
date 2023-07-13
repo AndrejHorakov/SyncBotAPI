@@ -20,6 +20,7 @@
 
     <ItemGroup>
       <Folder Include="Mocks\" />
+      <Folder Include="Models\PostModels\" />
     </ItemGroup>
 
 </Project>
