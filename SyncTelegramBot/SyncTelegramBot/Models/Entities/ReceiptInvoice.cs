@@ -1,6 +1,6 @@
 namespace SyncTelegramBot.Models.Entities;
 
-public record ReceiptInvoice(string Number, string ВидОперации, int СуммаДокумента, Автор author)
+public record ReceiptInvoice(string Number, string ВидОперации, int СуммаДокумента, OnlyDescription author)
 {
     public override string ToString()
     {

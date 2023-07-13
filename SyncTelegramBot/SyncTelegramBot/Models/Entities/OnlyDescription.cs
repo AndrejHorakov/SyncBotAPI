@@ -1,6 +1,6 @@
 namespace SyncTelegramBot.Models.Entities;
 
-public record Автор(string Description)
+public record OnlyDescription(string Description)
 {
     public override string ToString()
     {

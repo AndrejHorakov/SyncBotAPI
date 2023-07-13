@@ -1,6 +1,6 @@
 namespace SyncTelegramBot.Models.Entities;
 
-public record ContragentContract(string Code, string Description)
+public record DescriptionAndCode(string Code, string Description)
 {
     public override string ToString()
     {
