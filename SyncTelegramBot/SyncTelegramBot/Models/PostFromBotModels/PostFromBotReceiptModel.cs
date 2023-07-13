@@ -6,11 +6,11 @@ public class PostFromBotReceiptModel
 {
     public string? Contragent { get; init; }
     
-    public string? OperationType { get; init; }
+    public string OperationType { get; init; }
     
     public string? Contract { get; init; }
     
-    public int? Amount { get; init; }
+    public int Amount { get; init; }
     
     public string? Correspondence { get; init; }
     

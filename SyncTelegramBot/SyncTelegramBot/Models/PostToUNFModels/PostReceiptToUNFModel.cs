@@ -5,9 +5,9 @@ namespace SyncTelegramBot.Models.PostToUNFModels;
 
 public class PostReceiptToUNFModel
 {
+    [JsonRequired]
     [JsonPropertyName("Date")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public DateTime? Date { get; set; }
+    public DateTime Date { get; set; }
     
     [JsonPropertyName("Контрагент_Key")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
@@ -15,7 +15,7 @@ public class PostReceiptToUNFModel
 
     [JsonRequired]
     [JsonPropertyName("ВидОперации")]
-    public string? OperationType { get; set; }
+    public string OperationType { get; set; }
 
     [JsonPropertyName("Документ")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
@@ -27,7 +27,7 @@ public class PostReceiptToUNFModel
     
     [JsonRequired]
     [JsonPropertyName("СуммаДокумента")]
-    public int? Amount { get; set; }
+    public int Amount { get; set; }
 
     [JsonPropertyName("Контрагент_Key")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
@@ -56,10 +56,6 @@ public class PostReceiptToUNFModel
     [JsonPropertyName("Контрагент_Key")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? OrganisationAccount { get; set; }
-
-    [JsonPropertyName("Контрагент_Key")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public string? DocumentFromDecryptionOfPayment { get; set; }
 
     [JsonPropertyName("Контрагент_Key")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
