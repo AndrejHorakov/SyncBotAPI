@@ -1,9 +1,22 @@
+using System.Text.Json.Serialization;
+
 namespace SyncTelegramBot.Models.Entities;
 
-public record LoanAgreement(string Number, string ВидДоговора, int РазмерПлатежа, int СуммаДокумента)
+public class LoanAgreement
 {
+    [JsonPropertyName("Number")]
+    public string? Number { get; set; }
+    
+    [JsonPropertyName("ВидДоговора")]
+    public string? ContractType { get; set; }
+    
+    [JsonPropertyName("РазмерПлатежа")]
+    public double? PaymentSize { get; set; }
+    
+    [JsonPropertyName("СуммаДокумента")]
+    public double? DocumentAmount { get; set; }
     public override string ToString()
     {
-        return $"{Number} {ВидДоговора} {РазмерПлатежа}/{СуммаДокумента}";
+        return $"{Number} {ContractType} {PaymentSize}/{DocumentAmount}";
     }
 }
