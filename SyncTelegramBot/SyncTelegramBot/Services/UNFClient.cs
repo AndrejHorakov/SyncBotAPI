@@ -23,7 +23,7 @@ public class UNFClient : IUNFClient
         return await _httpClient.GetAsync(_baseURI + filter);
     }
 
-    public async Task<string?> GetGiudFirst(string filter)
+    public async Task<string?> GetGuidFirst(string filter)
     {
         var respMess = await _httpClient.GetAsync(_baseURI + filter);
         return (await respMess.Content.ReadFromJsonAsync<GuidEntity>())?.Guid;
