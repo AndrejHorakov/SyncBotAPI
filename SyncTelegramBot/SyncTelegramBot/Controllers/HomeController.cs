@@ -58,6 +58,7 @@ public partial class HomeController : Controller
     public async Task<JsonResult> SaveReceipt([FromBody] PostFromBotReceiptModel postReceiptModel)
     {
         var res = new AnswerFromAPI();
+        HttpResponseMessage? ans;
         var model = new PostReceiptToUNFModel();
         _requestHandler.HandleDefault(model, postReceiptModel.OperationType, postReceiptModel.Amount);
         switch (postReceiptModel.OperationType)
@@ -66,22 +67,21 @@ public partial class HomeController : Controller
             {
                 await _requestHandler.HandleContragentAsync(model, _unfClient, model.Contragent!);
                 await _requestHandler.HandleDecryptionContractAsync(model, _unfClient, model.Contragent!);
-                var ans = await _unfClient.PostReceipt(model);
-                res.Answer = ans!.StatusCode == HttpStatusCode.OK
-                    ? "Операция прошла успешно!"
-                    : "Операция была прервана, произошла ошибка!";
+                ans = await _unfClient.PostReceipt(model);
                 break;
             }
             case "РасчетыПоКредитам":
             {
                 await _requestHandler.HandleCorrespondenceAsync(model, _unfClient, postReceiptModel.Correspondence!);
-                var ans = await _unfClient.PostReceipt(model);
-                res.Answer = ans!.StatusCode == HttpStatusCode.OK
-                    ? "Операция прошла успешно!"
-                    : "Операция была прервана, произошла ошибка!";
+                ans = await _unfClient.PostReceipt(model);
                 break;
             }
             case "ВозвратЗаймаСотрудником":
+            {
+                await _requestHandler.HandleCorrespondenceAsync(model, _unfClient, postReceiptModel.Correspondence!);
+                ans = await _unfClient.PostReceipt(model);
+                break;
+            }
             case "ПокупкаВалюты":
             case "ПолучениеНаличныхВБанке":
             case "ПрочиеРасчеты":
@@ -90,6 +90,7 @@ public partial class HomeController : Controller
             case "ОтНашейОрганизации":
             default:
             {
+                ans = new HttpResponseMessage();
                 res = new()
                 {
                     Answer = "Ошибка в имени операции, обратитесь к разработчикам"
@@ -97,6 +98,10 @@ public partial class HomeController : Controller
                 break;
             }
         }
+        if (res.Answer is null)
+            res.Answer = ans!.StatusCode == HttpStatusCode.OK
+                ? "Операция прошла успешно!"
+                : "Операция была прервана, произошла ошибка!";
         return Json(res);
     }
     
