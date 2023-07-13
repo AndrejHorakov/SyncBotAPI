@@ -1,16 +1,21 @@
+using Microsoft.Extensions.Options;
+using SyncTelegramBot.Models.HelpModels;
 using SyncTelegramBot.Services.Abstractions;
 
 namespace SyncTelegramBot.Services;
 
 public class UNFClient : IUNFClient
 {
+    private RequestStrings _requestStrings;
     private HttpClient _httpClient;
-    private static readonly Uri _baseURI = new Uri("https://1c.hightech.group/unf_sandbox/ru/odata/standard.odata/");
+    private Uri _baseURI;
 
-    public UNFClient()
+    public UNFClient(IOptions<RequestStrings> requestStrings)
     {
+        _requestStrings = requestStrings.Value;
+        _baseURI = new (_requestStrings.BaseUri);
         _httpClient = new HttpClient{BaseAddress = _baseURI};
-        _httpClient.DefaultRequestHeaders.Add("Authorization", "Basic cGV0cm92Okp1MFZ1dGFt");
+        _httpClient.DefaultRequestHeaders.Add("Authorization", _requestStrings.Authorization);
         _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
     }
     
