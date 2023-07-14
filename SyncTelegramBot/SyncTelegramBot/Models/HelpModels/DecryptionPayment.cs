@@ -14,11 +14,11 @@ public class DecryptionPayment
     
     [JsonPropertyName("СуммаРасчетов")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public int? AmountCount { get; set; }
+    public double? AmountCount { get; set; }
     
     [JsonPropertyName("СуммаПлатежа")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public int? AmountPayment { get; set; }
+    public double? AmountPayment { get; set; }
     
     [JsonPropertyName("Документ")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
@@ -27,4 +27,8 @@ public class DecryptionPayment
     [JsonPropertyName("Документ_Type")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? DocumentType { get; set; }
+    
+    [JsonPropertyName("ТипСуммы")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? AmountType { get; set; }
 }

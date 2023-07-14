@@ -9,12 +9,13 @@ public static class StaticStructures
         ["Catalog_СтавкиНДС"] = typeof(AnswerFromUNF<VATRate>),
         ["Catalog_Сотрудники"] = typeof(AnswerFromUNF<OnlyDescription>),
         ["Catalog_Организации"] = typeof(AnswerFromUNF<OnlyDescription>),
-        ["Catalog_ВидыНалогов"] = typeof(AnswerFromUNF<DescriptionAndCode>),
-        ["Catalog_Контрагенты"] = typeof(AnswerFromUNF<DescriptionAndCode>),
-        ["Catalog_БанковскиеСчета"] = typeof(AnswerFromUNF<BankAccount>),
-        ["ChartOfAccounts_Управленческий"] = typeof(AnswerFromUNF<Correspondence>),
-        ["Catalog_ДоговорыКонтрагентов"] = typeof(AnswerFromUNF<DescriptionAndCode>),
+        ["Document_РасходИзКассы"] = typeof(AnswerFromUNF<ReceiptInvoice>),
+        ["Catalog_ВидыНалогов"] = typeof(AnswerFromUNF<CodeAndDescription>),
+        ["Catalog_Контрагенты"] = typeof(AnswerFromUNF<CodeAndDescription>),
+        ["Catalog_БанковскиеСчета"] = typeof(AnswerFromUNF<CodeAndDescription>),
         ["Document_ПриходнаяНакладная"] = typeof(AnswerFromUNF<ReceiptInvoice>),
-        ["Document_ДоговорКредитаИЗайма"] = typeof(AnswerFromUNF<LoanAgreement>)
+        ["Document_ДоговорКредитаИЗайма"] = typeof(AnswerFromUNF<LoanAgreement>),
+        ["ChartOfAccounts_Управленческий"] = typeof(AnswerFromUNF<Correspondence>),
+        ["Catalog_ДоговорыКонтрагентов"] = typeof(AnswerFromUNF<CodeAndDescription>),
     };
 }

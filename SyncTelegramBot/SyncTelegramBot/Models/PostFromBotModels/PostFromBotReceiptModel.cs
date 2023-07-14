@@ -14,8 +14,6 @@ public class PostFromBotReceiptModel
     
     public string? Correspondence { get; init; }
     
-    public string? Document { get; init; }
-    
     public string? LoanAgreement { get; init; }
     
     public string? Employee { get; init; }
@@ -27,6 +25,8 @@ public class PostFromBotReceiptModel
     public string? OrganisationAccount { get; init; }
     
     public string? DocumentFromDecryptionOfPayment { get; init; }
+    
+    public string? ContractFromDecryptionOfPayment { get; init; }
     
     public string? Organisation { get; init; }
 }

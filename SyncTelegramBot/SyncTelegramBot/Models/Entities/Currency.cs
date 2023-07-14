@@ -1,9 +1,16 @@
+using System.Text.Json.Serialization;
+
 namespace SyncTelegramBot.Models.Entities;
 
-public record Currency(string Description, string СимвольноеПредставление)
+public class Currency
 {
+    [JsonPropertyName("Description")]
+    public string Description { get; set; }
+    
+    [JsonPropertyName("СимвольноеПредставление")]
+    public string Sign { get; set; }
     public override string ToString()
     {
-        return $"{СимвольноеПредставление}, {Description}";
+        return $"{Sign}*{Description}";
     }
 }
