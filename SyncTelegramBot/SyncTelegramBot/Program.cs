@@ -7,6 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddScoped<IUNFClient, UNFClient>();
 builder.Services.AddScoped<IGetRequestHandler, GetRequestHandler>();
+builder.Services.AddScoped<IReceiptRequestHandler, ReceiptRequestHandler>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
