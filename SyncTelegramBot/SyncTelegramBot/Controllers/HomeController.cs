@@ -20,9 +20,9 @@ public class HomeController : Controller
     [HttpGet]
 
     [Route("ListItems")]
-    public async Task<JsonResult> GetList(string? filter, GetRequestHandler getRequestHandler)
+    public async Task<JsonResult> GetList([FromQuery]string? entity, [FromQuery]string? addOptions, GetRequestHandler getRequestHandler)
     {
-        return Json(await getRequestHandler.GetList(_unfClient, filter!));
+        return Json(await getRequestHandler.GetList(_unfClient, entity!, addOptions!));
     }
 
     [HttpPost]

@@ -23,7 +23,6 @@ public static class StaticStructures
         ["Catalog_ДоговорыКонтрагентов"] = typeof(AnswerFromUNF<CodeAndDescription>),
     };
 
-
     public static readonly Dictionary<string, Func<IUNFClient, PostToUNFModel, PostFromBotModel, Task>>
         HandledOperations = new()
         {
@@ -93,4 +92,16 @@ public static class StaticStructures
 
             },
         };
+
+    public static Dictionary<string, Func<IUNFClient, string, Task<string?>>> HandleOptionKey = new()
+    {
+        ["Контрагент_Key"] = async (unfClient, contragent) => 
+            await ReceiptRequestHandler.HandleContragentAsync(new PostToUNFModel(), unfClient, contragent),
+        ["Owner"] = async (unfClient, contragent) => 
+            await ReceiptRequestHandler.HandleContragentAsync(new PostToUNFModel(), unfClient, contragent),
+        ["Сотрудник_Key"] = async (unfClient, contragent) => 
+            await ReceiptRequestHandler.HandleContragentAsync(new PostToUNFModel(), unfClient, contragent),
+        ["Автор_Key"] = async (unfClient, contragent) => 
+            await ReceiptRequestHandler.HandleContragentAsync(new PostToUNFModel(), unfClient, contragent),
+    };
 }
