@@ -3,7 +3,7 @@ using SyncTelegramBot.Services.Abstractions;
 
 namespace SyncTelegramBot.Services;
 
-public class GetRequestHandler : IGetRequestHandler
+public class GetRequestHandler
 {
     public async Task<AnswerFromAPI> GetList(IUNFClient unfClient, string filter)
     {

@@ -1,8 +1,4 @@
-
-using System.Net;
 using Microsoft.AspNetCore.Mvc;
-using SyncTelegramBot.Models.Entities;
-using SyncTelegramBot.Models.HelpModels;
 using SyncTelegramBot.Models.PostModels;
 using SyncTelegramBot.Models.PostToUNFModels;
 using SyncTelegramBot.Services;
@@ -14,17 +10,16 @@ namespace SyncTelegramBot.Controllers;
 [Route("[controller]")]
 public class HomeController : Controller
 {
-
     private readonly IUNFClient _unfClient;
-    private IReceiptRequestHandler _requestHandler;
 
-    public HomeController(IUNFClient unfClient, IReceiptRequestHandler requestHandler)
+    public HomeController(IUNFClient unfClient)
     {
         _unfClient = unfClient;
-        _requestHandler = requestHandler;
     }
     
     [HttpGet]
+
+    [Route("ListItems")]
     public async Task<JsonResult> GetList(string? filter, GetRequestHandler getRequestHandler)
     {
         return Json(await getRequestHandler.GetList(_unfClient, filter!));
