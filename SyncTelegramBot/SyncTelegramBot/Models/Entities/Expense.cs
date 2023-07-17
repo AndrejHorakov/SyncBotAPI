@@ -15,6 +15,6 @@ public class Expense
     
     public override string ToString()
     {
-        return $"{Number}*{Employee} - {DocumentAmount}";
+        return $"{Number}*{Employee}*{DocumentAmount}";
     }
 }

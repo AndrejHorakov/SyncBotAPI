@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace SyncTelegramBot.Models.PostModels;
 
-public class PostFromBotReceiptModel
+public class PostFromBotModel
 {
     public string? Contragent { get; init; }
     
