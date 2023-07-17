@@ -10,17 +10,17 @@ namespace SyncTelegramBot.Services;
 
 public class UNFClient : IUNFClient
 {
-    private RequestStrings _requestStrings;
+    private RequestValues _requestValues;
     private HttpClient _httpClient;
     private Uri _baseURI;
     private static readonly Uri _topOneFilter = new Uri("$top=1");
 
-    public UNFClient(IOptions<RequestStrings> requestStrings)
+    public UNFClient(IOptions<RequestValues> requestStrings)
     {
-        _requestStrings = requestStrings.Value;
-        _baseURI = new (_requestStrings.BaseUri);
+        _requestValues = requestStrings.Value;
+        _baseURI = new (_requestValues.BaseUri);
         _httpClient = new HttpClient{BaseAddress = _baseURI};
-        _httpClient.DefaultRequestHeaders.Add("Authorization", _requestStrings.Authorization);
+        _httpClient.DefaultRequestHeaders.Add("Authorization", _requestValues.Authorization);
         _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
     }
     
@@ -36,7 +36,7 @@ public class UNFClient : IUNFClient
         return ans?.Value[0].Guid;
     }
 
-    public async Task<HttpResponseMessage?> PostReceipt(PostReceiptToUNFModel model)
+    public async Task<HttpResponseMessage?> PostReceipt(PostToUNFModel model)
     {
         var ans =  await _httpClient.PostAsJsonAsync("Document_ПоступлениеВКассу?$format=json", model);
         if (ans.StatusCode != HttpStatusCode.Created)
