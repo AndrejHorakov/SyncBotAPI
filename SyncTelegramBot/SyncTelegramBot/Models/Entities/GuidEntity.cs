@@ -1,3 +1,9 @@
+using System.Text.Json.Serialization;
+
 namespace SyncTelegramBot.Models.Entities;
 
-public record GuidEntity(string? Guid);
+public class GuidEntity
+{
+    [JsonPropertyName("Ref_Key")]
+    public string? Guid { get; set; }
+}
