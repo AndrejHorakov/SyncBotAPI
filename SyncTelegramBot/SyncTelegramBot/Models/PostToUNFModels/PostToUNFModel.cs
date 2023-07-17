@@ -3,7 +3,7 @@ using SyncTelegramBot.Models.HelpModels;
 
 namespace SyncTelegramBot.Models.PostToUNFModels;
 
-public class PostReceiptToUNFModel
+public class PostToUNFModel
 {
     [JsonRequired]
     [JsonPropertyName("Date")]
@@ -27,41 +27,45 @@ public class PostReceiptToUNFModel
     
     [JsonRequired]
     [JsonPropertyName("СуммаДокумента")]
-    public int Amount { get; set; }
+    public double Amount { get; set; }
+    
+    [JsonRequired]
+    [JsonPropertyName("СуммаУчета")]
+    public double? AmountCount { get; set; }
 
-    [JsonPropertyName("Контрагент_Key")]
+    [JsonPropertyName("Корреспонденция_Key")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? Correspondence { get; set; }
 
-    [JsonPropertyName("Контрагент_Key")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public string? Document { get; set; }
-
-    [JsonPropertyName("Контрагент_Key")]
+    [JsonPropertyName("ДоговорКредитаЗайма_Key")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? LoanAgreement { get; set; }
 
-    [JsonPropertyName("Контрагент_Key")]
+    [JsonPropertyName("Подотчетник_Key")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? Employee { get; set; }
 
-    [JsonPropertyName("Контрагент_Key")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public string? AmountType { get; set; }
-
-    [JsonPropertyName("Контрагент_Key")]
+    [JsonPropertyName("ВалютаДенежныхСредств_Key")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? Currency { get; set; }
 
-    [JsonPropertyName("Контрагент_Key")]
+    [JsonPropertyName("СчетОрганизации_Key")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? OrganisationAccount { get; set; }
 
-    [JsonPropertyName("Контрагент_Key")]
+    [JsonPropertyName("Организация_Key")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? Organisation { get; set; }
     
+    [JsonPropertyName("Курс")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public int? ExchangeRate { get; set; }
+    
+    [JsonPropertyName("Кратность")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public double? Multiplicity { get; set; }
+    
     [JsonPropertyName("РасшифровкаПлатежа")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public DecryptionPayment? Decryption { get; set; }
+    public DecryptionPayment[]? Decryption { get; set; }
 }

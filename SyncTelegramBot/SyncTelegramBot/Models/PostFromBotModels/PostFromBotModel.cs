@@ -1,8 +1,6 @@
-using System.Text.Json.Serialization;
-
 namespace SyncTelegramBot.Models.PostModels;
 
-public class PostFromBotReceiptModel
+public class PostFromBotModel
 {
     public string? Contragent { get; init; }
     
@@ -13,8 +11,6 @@ public class PostFromBotReceiptModel
     public int Amount { get; init; }
     
     public string? Correspondence { get; init; }
-    
-    public string? Document { get; init; }
     
     public string? LoanAgreement { get; init; }
     
@@ -27,6 +23,8 @@ public class PostFromBotReceiptModel
     public string? OrganisationAccount { get; init; }
     
     public string? DocumentFromDecryptionOfPayment { get; init; }
+    
+    public string? ContractFromDecryptionOfPayment { get; init; }
     
     public string? Organisation { get; init; }
 }
