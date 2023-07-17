@@ -8,5 +8,5 @@ public interface IUNFClient
 
     public Task<string?> GetGuidFirst(string filter);
     
-    public Task<HttpResponseMessage?> PostReceipt(PostToUNFModel model);
+    public Task<HttpResponseMessage?> PostReceipt(PostToUNFModel? model);
 }
