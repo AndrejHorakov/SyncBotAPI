@@ -3,7 +3,7 @@ using SyncTelegramBot.Models.HelpModels;
 
 namespace SyncTelegramBot.Models.PostToUNFModels;
 
-public class PostReceiptToUNFModel
+public class PostToUNFModel
 {
     [JsonRequired]
     [JsonPropertyName("Date")]

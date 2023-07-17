@@ -7,8 +7,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddScoped<IUNFClient, UNFClient>();
-builder.Services.AddScoped<IGetRequestHandler, GetRequestHandler>();
-builder.Services.AddScoped<IReceiptRequestHandler, ReceiptRequestHandler>();
+builder.Services.AddScoped<GetRequestHandler>();
+builder.Services.AddScoped<PostReceiveRequestHandler>();
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -19,7 +19,7 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.Configure<RequestStrings>(builder.Configuration.GetSection(RequestStrings.Position));
+builder.Services.Configure<RequestValues>(builder.Configuration.GetSection(RequestValues.Position));
 
 var app = builder.Build();
 
