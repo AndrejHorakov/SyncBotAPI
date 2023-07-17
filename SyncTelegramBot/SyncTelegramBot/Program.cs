@@ -1,3 +1,4 @@
+using System.Text.Encodings.Web;
 using SyncTelegramBot.Models.HelpModels;
 using SyncTelegramBot.Services;
 using SyncTelegramBot.Services.Abstractions;
@@ -9,7 +10,11 @@ builder.Services.AddScoped<IUNFClient, UNFClient>();
 builder.Services.AddScoped<IGetRequestHandler, GetRequestHandler>();
 builder.Services.AddScoped<IReceiptRequestHandler, ReceiptRequestHandler>();
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
+    });
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

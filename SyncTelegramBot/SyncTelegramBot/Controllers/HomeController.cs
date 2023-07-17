@@ -1,4 +1,3 @@
-
 using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using SyncTelegramBot.Models.HelpModels;
@@ -10,7 +9,7 @@ namespace SyncTelegramBot.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public partial class HomeController : Controller
+public class HomeController : Controller
 {
 
     private readonly IUNFClient _unfClient;
