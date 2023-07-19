@@ -1,29 +1,32 @@
 using Microsoft.AspNetCore.Mvc;
+using SyncTelegramBot.Models.PostModels;
+using SyncTelegramBot.Services;
 using SyncTelegramBot.Services.Abstractions;
 
 namespace SyncTelegramBot.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public partial class HomeController : Controller
+public class HomeController : Controller
 {
-    private IUNFClient _unfClient;
-    private IGetRequestHandler _getRequestHandler;
+    private readonly IUNFClient _unfClient;
 
-    public HomeController(IUNFClient unfClient, IGetRequestHandler getRequestHandler)
+    public HomeController(IUNFClient unfClient)
     {
         _unfClient = unfClient;
-        _getRequestHandler = getRequestHandler;
     }
     
     [HttpGet]
-    public async Task<JsonResult> GetList(string filter)
+    [Route("ListItems")]
+    public async Task<JsonResult> GetList(string? filter, GetRequestHandler getRequestHandler)
     {
-        return Json(await _getRequestHandler.GetList(_unfClient, filter));
+        return Json(await getRequestHandler.GetList(_unfClient, filter!));
     }
-}
 
-public partial class HomeController
-{
- 
+    [HttpPost]
+    [Route("Income")]
+    public async Task<JsonResult> SaveReceipt([FromBody] PostFromBotModel postModel, PostReceiveRequestHandler postHandler)
+    {
+        return Json(await postHandler.SaveReceipt(_unfClient, postModel));
+    }
 }
