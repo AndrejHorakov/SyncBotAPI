@@ -13,8 +13,13 @@ public class Expense
     [JsonPropertyName("Подотчетник")]
     public OnlyDescription Employee { get; set; }
     
+    [JsonPropertyName("НовыйМеханизмИнкассации")]
+    public bool? Type { get; set; }
+    
     public override string ToString()
     {
-        return $"{Number}*{Employee}*{DocumentAmount}";
+        return Type is not null 
+            ? $"{Number}*{Employee}*{DocumentAmount}*Касса"
+            : $"{Number}*{Employee}*{DocumentAmount}*Счет";
     }
 }

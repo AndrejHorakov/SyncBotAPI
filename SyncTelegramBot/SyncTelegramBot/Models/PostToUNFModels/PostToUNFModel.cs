@@ -59,7 +59,7 @@ public class PostToUNFModel
     
     [JsonPropertyName("Курс")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public int? ExchangeRate { get; set; }
+    public double? ExchangeRate { get; set; }
     
     [JsonPropertyName("Кратность")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
