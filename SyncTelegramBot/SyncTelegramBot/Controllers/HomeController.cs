@@ -11,10 +11,12 @@ namespace SyncTelegramBot.Controllers;
 public class HomeController : Controller
 {
     private readonly IUNFClient _unfClient;
+    private readonly ReceiptRequestHandler _handler;
 
-    public HomeController(IUNFClient unfClient)
+    public HomeController(IUNFClient unfClient, ReceiptRequestHandler handler)
     {
         _unfClient = unfClient;
+        _handler = handler;
     }
     
     [HttpGet]
@@ -22,13 +24,13 @@ public class HomeController : Controller
     [Route("ListItems")]
     public async Task<JsonResult> GetList([FromQuery]string? entity, [FromQuery]string? addOptions, GetRequestHandler getRequestHandler)
     {
-        return Json(await getRequestHandler.GetList(_unfClient, entity!, addOptions!));
+        return Json(await getRequestHandler.GetList(_unfClient, entity!, addOptions!, _handler));
     }
 
     [HttpPost]
     [Route("Income")]
     public async Task<JsonResult> SaveReceipt([FromBody] PostFromBotModel postModel, PostReceiveRequestHandler postHandler)
     {
-        return Json(await postHandler.SaveReceipt(_unfClient, postModel));
+        return Json(await postHandler.SaveReceipt(_unfClient, postModel, _handler));
     }
 }

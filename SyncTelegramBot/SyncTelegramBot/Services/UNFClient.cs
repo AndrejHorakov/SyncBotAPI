@@ -33,6 +33,8 @@ public class UNFClient : IUNFClient
     {
         var respMess = await _httpClient.GetAsync(_baseURI + filter);
         var ans = await respMess.Content.ReadFromJsonAsync<AnswerFromUNF<GuidEntity>>();
+        if (ans?.Value.Count <= 0)
+            return null;
         return ans?.Value[0].Guid;
     }
 

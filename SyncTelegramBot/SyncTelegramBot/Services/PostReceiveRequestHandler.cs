@@ -8,13 +8,19 @@ namespace SyncTelegramBot.Services;
 
 public class PostReceiveRequestHandler
 {
-    public async Task<AnswerFromAPI> SaveReceipt(IUNFClient unfClient, PostFromBotModel postModel)
+    public async Task<AnswerFromAPI> SaveReceipt(IUNFClient unfClient, PostFromBotModel postModel, ReceiptRequestHandler handler)
     {
         var model = new PostToUNFModel();
-        ReceiptRequestHandler.HandleDefault(model, postModel.OperationType, postModel.Amount);
-        
+        handler.HandleDefault(model, postModel.OperationType, postModel.Amount);
+
         if (StaticStructures.HandledOperations.ContainsKey(postModel.OperationType))
-            await StaticStructures.HandledOperations[postModel.OperationType](unfClient, model, postModel);
+        {
+            if(!await StaticStructures.HandledOperations[postModel.OperationType](unfClient, model, postModel, handler))
+                return new AnswerFromAPI
+                {
+                    Answer = "Ошибка в ведённых данных, проверьте ввод и повторите"
+                };
+        }     
         else
             return new AnswerFromAPI
             {

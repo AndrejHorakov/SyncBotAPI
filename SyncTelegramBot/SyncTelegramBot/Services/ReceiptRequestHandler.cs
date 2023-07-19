@@ -7,16 +7,18 @@ namespace SyncTelegramBot.Services;
 
 public class ReceiptRequestHandler
 {
-    private static double _defaultExchangeRate;
-    private static double _defaultMultiplicity;
+    private  double _defaultExchangeRate;
+    private  double _defaultMultiplicity;
+    private  RequestValues _requestValues;
 
-    public ReceiptRequestHandler(IOptions<RequestValues> rv)
+    public ReceiptRequestHandler(IOptions<RequestValues> requestStrings)
     {
-        _defaultMultiplicity = rv.Value.DefaultMultiplicity;
-        _defaultExchangeRate = rv.Value.DefaultExchangeRate;
+        _requestValues = requestStrings.Value;
+        _defaultMultiplicity = _requestValues.DefaultMultiplicity;
+        _defaultExchangeRate = _requestValues.DefaultExchangeRate;
     }
    
-    public static PostToUNFModel? HandleDefault(PostToUNFModel? model, string operationType, int amount)
+    public PostToUNFModel? HandleDefault(PostToUNFModel? model, string operationType, int amount)
     {
         if (model is null)
             model = new PostToUNFModel();
@@ -27,121 +29,140 @@ public class ReceiptRequestHandler
         return model;
     }
 
-    public static async Task<string?> HandleContragentAsync(PostToUNFModel? model, IUNFClient unfClient, string contragent)
+    public async Task<string?> HandleContragentAsync(PostToUNFModel? model, IUNFClient unfClient, string contragent)
     {
-        if (model is null)
-            model = HandleDefault(model, "Прочее", 0);
-        var splitContragent = contragent.Split('*');
+        var splitContragent = ValidateModelAndInput(model, contragent, 2);
+        if (!splitContragent.Item1)
+            return null;
         model!.Contragent = await unfClient
-            .GetGuidFirst($"Catalog_Контрагенты?$filter=Code eq '{splitContragent[0]}' and Description eq '{splitContragent[1]}'");
+            .GetGuidFirst($"Catalog_Контрагенты?$filter=Code eq '{splitContragent.Item2[0]}' and Description eq '{splitContragent.Item2[1]}'");
         return model.Contragent;
     }
 
-    public static async Task<string?> HandleDecryptionContractAsync(PostToUNFModel? model, IUNFClient unfClient, string contragentGuid, string contractFromDecryption)
+    public async Task<string?> HandleDecryptionContractAsync(PostToUNFModel? model, IUNFClient unfClient, string contragentGuid, string contractFromDecryption)
     {
-        if (model is null)
-            model = HandleDefault(model, "Прочее", 0);
+        var splitDecrContract = ValidateModelAndInput(model, contractFromDecryption, 2);
+        if (!splitDecrContract.Item1)
+            return null;
         if (model.Decryption is null)
             model.Decryption = new DecryptionPayment[]{new (){ LineNumber = "1"}};
-        var splitDecrContract = contractFromDecryption.Split('*');
         model.Decryption[0].Contract = await unfClient.GetGuidFirst(
-            $"Catalog_ДоговорыКонтрагентов?$filter=Owner eq cast(guid'{contragentGuid}', 'Catalog_Контрагенты') and Code eq '{splitDecrContract[0]}'");
+            $"Catalog_ДоговорыКонтрагентов?$filter=Owner eq cast(guid'{contragentGuid}', 'Catalog_Контрагенты') and Code eq '{splitDecrContract.Item2[0]}'");
         model.Decryption[0].AmountPayment = model.Amount;
         model.Decryption[0].AmountCount = model.Amount;
         return model.Decryption[0].Contract;
     }
 
-    public static async Task<string?> HandleDecryptionDocumentAsync(PostToUNFModel? model, IUNFClient unfClient, string document)
+    public async Task<string?> HandleDecryptionDocumentAsync(PostToUNFModel? model, IUNFClient unfClient, string document)
     {
-        if (model is null)
-            model = HandleDefault(model, "Прочее", 0);
+        var splitDecryption = ValidateModelAndInput(model, document, 4);
+        if (!splitDecryption.Item1)
+            return null;
         if (model.Decryption is null)
             model.Decryption = new DecryptionPayment[]{new (){ LineNumber = "1"}};
-        var splitDecryption = document.Split('*');
         model.Decryption[0].DocumentType = "StandardODATA.Document_ПриходнаяНакладная";
         model.Decryption[0].Document = await unfClient.GetGuidFirst(
-            $"Document_ПриходнаяНакладная?$filter=Number eq '{splitDecryption[0]}' and СуммаДокумента eq {splitDecryption[2]}");
+            $"Document_ПриходнаяНакладная?$filter=Number eq '{splitDecryption.Item2[0]}' and СуммаДокумента eq {splitDecryption.Item2[2]}");
         return model.Decryption[0].Document;
     }
 
-    public static async Task<string?> HandleCorrespondenceAsync(PostToUNFModel? model, IUNFClient unfClient, string correspondence)
+    public async Task<string?> HandleCorrespondenceAsync(PostToUNFModel? model, IUNFClient unfClient, string correspondence)
     {
-        if (model is null)
-            model = HandleDefault(model, "Прочее", 0);
-        var splitCorrespondence = correspondence.Split('*');
+        var splitCorrespondence = ValidateModelAndInput(model, correspondence, 4);
+        if (!splitCorrespondence.Item1)
+            return null;
+      
         model.Correspondence = await unfClient.GetGuidFirst(
-            $"ChartOfAccounts_Управленческий?$filter=Description eq '{splitCorrespondence[1]}' and ТипСчета eq '{splitCorrespondence[2]}'");
+            $"ChartOfAccounts_Управленческий?$filter=Description eq '{splitCorrespondence.Item2[1]}' and ТипСчета eq '{splitCorrespondence.Item2[2]}'");
         return model.Correspondence;
     }
 
-    public static async Task<string?> HandleLoanAgreementAsync(PostToUNFModel? model, IUNFClient unfClient, string loanAgreement)
+    public async Task<string?> HandleLoanAgreementAsync(PostToUNFModel? model, IUNFClient unfClient, string loanAgreement)
     {
+        var splitContragent = ValidateModelAndInput(model, loanAgreement, 4);
+        if (!splitContragent.Item1)
+            return null;
         if (model is null)
             model = HandleDefault(model, "Прочее", 0);
-        var splitContragent = loanAgreement.Split('*');
         model.LoanAgreement = await unfClient.GetGuidFirst(
-            $"Document_ДоговорКредитаИЗайма?$filter=Number eq '{splitContragent[0]}' and ВидДоговора eq '{splitContragent[1]}'");
+            $"Document_ДоговорКредитаИЗайма?$filter=Number eq '{splitContragent.Item2[0]}' and ВидДоговора eq '{splitContragent.Item2[1]}'");
         return model.LoanAgreement;
     }
 
-    public static async Task<string?> HandleEmployeeAsync(PostToUNFModel? model, IUNFClient unfClient, string employee)
+    public async Task<string?> HandleEmployeeAsync(PostToUNFModel? model, IUNFClient unfClient, string employee)
     {
-        if (model is null)
-            model = HandleDefault(model, "ОтПоставщика", 0);
+        var splitContragent = ValidateModelAndInput(model, employee, 1);
+        if (!splitContragent.Item1)
+            return null;
         model.Employee = await unfClient.GetGuidFirst($"Catalog_Сотрудники?$filter=Description eq '{employee}'");
         return model.Employee;
     }
 
-    public static async Task<string?> HandleCurrencyAsync(PostToUNFModel? model, IUNFClient unfClient, string currency)
+    public async Task<string?> HandleCurrencyAsync(PostToUNFModel? model, IUNFClient unfClient, string currency)
     {
-        if (model is null)
-            model = HandleDefault(model, "ОтПоставщика", 0);
-        var splitCurrency = currency.Split('*');
+        var splitCurrency = ValidateModelAndInput(model, currency, 2);
+        if (!splitCurrency.Item1)
+            return null;
         model!.Currency = await unfClient.GetGuidFirst(
-            $"Catalog_Валюты?$filter=СимвольноеПредставление eq '{splitCurrency[0]}' and Description eq '{splitCurrency[1]}'");
-        model.ExchangeRate = (int?)_defaultExchangeRate;
+            $"Catalog_Валюты?$filter=СимвольноеПредставление eq '{splitCurrency.Item2[0]}' and Description eq '{splitCurrency.Item2[1]}'");
+        model.ExchangeRate = _defaultExchangeRate;
         model.Multiplicity = _defaultMultiplicity;
         model.AmountCount = model.Amount * model.Multiplicity * model.ExchangeRate;
         return model.Currency;
     }
 
-    public static async Task<string?> HandleOrganisationAsync(PostToUNFModel? model, IUNFClient unfClient, string organisation)
+    public async Task<string?> HandleOrganisationAsync(PostToUNFModel? model, IUNFClient unfClient, string organisation)
     {
-        if (model is null)
-            model = HandleDefault(model, "ОтПоставщика", 0);
+        var splitCurrency = ValidateModelAndInput(model, organisation, 1);
+        if (!splitCurrency.Item1)
+            return null;
         var ans =  await unfClient.GetGuidFirst(
             $"Catalog_Организации?$filter=Description eq '{organisation}'");
         model.Organisation = ans;
         return ans;
     }
 
-    public static async Task<string?> HandleOrganisationAccountAsync(PostToUNFModel model, IUNFClient unfClient, string bankAccount)
+    public async Task<string?> HandleOrganisationAccountAsync(PostToUNFModel model, IUNFClient unfClient, string bankAccount)
     {
-        if (model is null)
-            model = HandleDefault(model, "ОтПоставщика", 0);
-        var splitBankAccount = bankAccount.Split('*');
-        var ans = await unfClient.GetGuidFirst(
-            $"Catalog_БанковскиеСчета?$filter=Code eq '{splitBankAccount[0]}' and Description eq '{splitBankAccount[1]}'");
-        model.OrganisationAccount = ans;
-        return ans;
+        var splitBankAccount = ValidateModelAndInput(model, bankAccount, 2);
+        if (!splitBankAccount.Item1)
+            return null;
+        model.OrganisationAccount = await unfClient.GetGuidFirst(
+            $"Catalog_БанковскиеСчета?$filter=Code eq '{splitBankAccount.Item2[0]}' and Description eq '{splitBankAccount.Item2[1]}'");
+        return model.OrganisationAccount;
     }
 
-    public static async Task<string?> HandleContractAsync(PostToUNFModel? model, IUNFClient unfClient, string contract)
+    public async Task<string?> HandleContractAsync(PostToUNFModel? model, IUNFClient unfClient, string contract)
     {
-        if (model is null)
-            model = HandleDefault(model, "ОтПоставщика", 0);
-        var splitContract = contract.Split('*');
+        var splitContract = ValidateModelAndInput(model, contract, 4);
+        if (!splitContract.Item1)
+            return null;
+        splitContract.Item2[3] = splitContract.Item2[3] == "Касса" ? "ИзКассы" : "СоСчета";
         model.Contract = await unfClient.GetGuidFirst(
-            $"Document_РасходИзКассы?$filter=Number eq '{splitContract[0]}' and СуммаДокумента eq {splitContract[2]}");
+            $"Document_Расход{splitContract.Item2[3]}?$filter=Number eq '{splitContract.Item2[0]}' and СуммаДокумента eq {splitContract.Item2[2]}");
         model.ContractType = "StandardODATA.Document_РасходИзКассы";
         return model.Contract;
     }
-    public static void HandleAmountTypeAsync(PostToUNFModel? model, string amountType)
+    
+    public string HandleAmountTypeAsync(PostToUNFModel? model, string amountType)
     {
+        if (!StaticStructures.AmountTypes.Contains(amountType))
+            return null;
         if (model.Decryption is null)
             model.Decryption = new DecryptionPayment[]{new (){ LineNumber = "1"}};
         model.Decryption[0].AmountType = amountType;
         model.Decryption[0].AmountPayment = model.Amount;
         model.Decryption[0].AmountCount = model.Amount;
+        return model.Decryption[0].AmountType!;
+    }
+
+    private Tuple<bool, string[]> ValidateModelAndInput(PostToUNFModel? model, string entity, int countSlices)
+    {
+        if (model is null)
+            HandleDefault(model, "Default", 0);
+        var splitEntity = entity.Split('*');
+        if (splitEntity.Length != countSlices)
+            return Tuple.Create<bool, string[]>(false, null);
+        return Tuple.Create(true, splitEntity);
     }
 }
