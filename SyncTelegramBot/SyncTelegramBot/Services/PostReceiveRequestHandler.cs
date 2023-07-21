@@ -8,6 +8,7 @@ namespace SyncTelegramBot.Services;
 
 public class PostReceiveRequestHandler
 {
+
     public async Task<AnswerFromAPI> SaveReceipt(IUNFClient unfClient, PostFromBotModel postModel, ReceiptRequestHandler handler)
     {
         var model = new PostToUNFModel();

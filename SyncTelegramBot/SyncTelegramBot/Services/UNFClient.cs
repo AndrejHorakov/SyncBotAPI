@@ -39,6 +39,7 @@ public class UNFClient : IUNFClient
     }
 
     public async Task<HttpResponseMessage?> PostReceipt(PostToUNFModel? model)
+
     {
         var ans =  await _httpClient.PostAsJsonAsync("Document_ПоступлениеВКассу?$format=json", model);
         if (ans.StatusCode != HttpStatusCode.Created)

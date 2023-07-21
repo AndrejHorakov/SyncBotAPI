@@ -14,5 +14,4 @@ public class VATRate
     {
         return $"{VatRate}*{Description}";
     }
-    
 }

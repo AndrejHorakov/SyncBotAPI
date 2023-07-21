@@ -12,7 +12,7 @@ public class Expense
     
     [JsonPropertyName("Подотчетник")]
     public OnlyDescription Employee { get; set; }
-    
+  
     [JsonPropertyName("НовыйМеханизмИнкассации")]
     public bool? Type { get; set; }
     

@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using SyncTelegramBot.Models.HelpModels;
 
+
 namespace SyncTelegramBot.Models.PostModels;
 
 public class PostFromBotModel
@@ -54,4 +55,5 @@ public class PostFromBotModel
     
     [JsonPropertyName("ContragentAccount")]
     public string? ContragentAccount { get; init; }
+
 }

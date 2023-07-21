@@ -24,6 +24,7 @@ public class ReceiptRequestHandler
     public PostToUNFModel? HandleDefault(PostToUNFModel? model, string operationType, int amount)
     {
         model ??= new PostToUNFModel();
+
         model.Amount = amount;
         model.AmountCount = amount;
         model.OperationType = operationType;
@@ -168,6 +169,7 @@ public class ReceiptRequestHandler
     {
         if (!StaticStructures.AmountTypes.Contains(amountType))
             return null;
+
         if (model.Decryption is null)
             model.Decryption = new DecryptionPayment[]{new (){ LineNumber = "1"}};
         model.Decryption[0].AmountType = amountType;
@@ -184,5 +186,6 @@ public class ReceiptRequestHandler
         if (splitEntity.Length != countSlices)
             return Tuple.Create<bool, string[]>(false, null);
         return Tuple.Create(true, splitEntity);
+
     }
 }

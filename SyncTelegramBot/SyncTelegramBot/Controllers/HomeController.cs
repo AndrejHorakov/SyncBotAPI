@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using SyncTelegramBot.Models.HelpModels;
 using SyncTelegramBot.Models.PostModels;
 using SyncTelegramBot.Services;
 using SyncTelegramBot.Services.Abstractions;
@@ -11,16 +10,16 @@ namespace SyncTelegramBot.Controllers;
 public class HomeController : Controller
 {
     private readonly IUNFClient _unfClient;
-    private readonly ReceiptRequestHandler _handler;
 
-    public HomeController(IUNFClient unfClient, ReceiptRequestHandler handler)
+
+    public HomeController(IUNFClient unfClient)
     {
         _unfClient = unfClient;
-        _handler = handler;
     }
     
     [HttpGet]
     [Route("ListItems")]
+
     public async Task<JsonResult> GetList([FromQuery]string? entity, [FromQuery]string? addOptions, GetRequestHandler getRequestHandler)
     {
         return Json(await getRequestHandler.GetList(_unfClient, entity, addOptions, _handler));
@@ -48,5 +47,6 @@ public class HomeController : Controller
     {
         postModel.Type = PostType.Move;
         return Json(await postService.SaveMove(_unfClient, postModel, _handler));
+
     }
 }
