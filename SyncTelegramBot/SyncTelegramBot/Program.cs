@@ -9,7 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddScoped<IUNFClient, UNFClient>();
 builder.Services.AddScoped<GetRequestHandler>();
 builder.Services.AddScoped<PostRequestsService>();
-builder.Services.AddScoped<ReceiptRequestHandler>();
+builder.Services.AddScoped<PostRequestHandler>();
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>

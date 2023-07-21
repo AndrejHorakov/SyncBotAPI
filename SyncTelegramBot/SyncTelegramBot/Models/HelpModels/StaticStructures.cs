@@ -94,7 +94,7 @@ public static class StaticStructures
         },
     };
 
-    public static readonly Dictionary<string, Func<PostToUNFModel, PostFromBotModel, ReceiptRequestHandler, Task<bool>>>
+    public static readonly Dictionary<string, Func<PostToUNFModel, PostFromBotModel, PostRequestHandler, Task<bool>>>
         HandledOperations = new()
         {
             ["ОтПокупателя"] = async (model, postBotModel, handler) =>
@@ -243,7 +243,7 @@ public static class StaticStructures
             },
         };
 
-    public static Dictionary<string, Func<string, ReceiptRequestHandler, Task<string?>>> HandleOptionKey = new()
+    public static Dictionary<string, Func<string, PostRequestHandler, Task<string?>>> HandleOptionKey = new()
     {
         ["Контрагент_Key"] = async (contragent, handler) => 
             $"guid'{await handler.HandleContragentAsync(new PostToUNFModel(), contragent)}'",

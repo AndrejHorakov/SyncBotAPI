@@ -6,14 +6,14 @@ using SyncTelegramBot.Services.Abstractions;
 
 namespace SyncTelegramBot.Services;
 
-public class ReceiptRequestHandler
+public class PostRequestHandler
 {
     private  double _defaultExchangeRate;
     private  double _defaultMultiplicity;
     private  RequestValues _requestValues;
     private  IUNFClient _unfClient;
 
-    public ReceiptRequestHandler(IOptions<RequestValues> requestStrings, IUNFClient unfClient)
+    public PostRequestHandler(IOptions<RequestValues> requestStrings, IUNFClient unfClient)
     {
         _unfClient = unfClient;
         _requestValues = requestStrings.Value;

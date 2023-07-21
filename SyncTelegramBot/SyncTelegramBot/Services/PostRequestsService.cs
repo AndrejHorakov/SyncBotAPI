@@ -8,7 +8,7 @@ namespace SyncTelegramBot.Services;
 
 public class PostRequestsService
 {
-    public async Task<AnswerFromAPI> SaveReceipt(IUNFClient unfClient, PostFromBotModel postModel, ReceiptRequestHandler handler)
+    public async Task<AnswerFromAPI> SaveReceipt(IUNFClient unfClient, PostFromBotModel postModel, PostRequestHandler handler)
     {
         var model = new PostToUNFModel();
         handler.HandleDefault(model, postModel.OperationType, postModel.Amount);
@@ -36,7 +36,7 @@ public class PostRequestsService
         };
     }
     
-    public async Task<AnswerFromAPI> SaveExpense(IUNFClient unfClient, PostFromBotModel postModel, ReceiptRequestHandler handler)
+    public async Task<AnswerFromAPI> SaveExpense(IUNFClient unfClient, PostFromBotModel postModel, PostRequestHandler handler)
     {
         var model = new PostToUNFModel();
         handler.HandleDefault(model, postModel.OperationType, postModel.Amount);
@@ -64,7 +64,7 @@ public class PostRequestsService
         };
     }
     
-    public async Task<AnswerFromAPI> SaveMove(IUNFClient unfClient, PostFromBotModel postModel, ReceiptRequestHandler handler)
+    public async Task<AnswerFromAPI> SaveMove(IUNFClient unfClient, PostFromBotModel postModel, PostRequestHandler handler)
     {
         var model = new PostToUNFModel();
         handler.HandleDefault(model, postModel.OperationType, postModel.Amount);

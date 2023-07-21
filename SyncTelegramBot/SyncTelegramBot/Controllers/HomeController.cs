@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using SyncTelegramBot.Models.HelpModels;
 using SyncTelegramBot.Models.PostModels;
 using SyncTelegramBot.Services;
 using SyncTelegramBot.Services.Abstractions;
@@ -10,11 +11,12 @@ namespace SyncTelegramBot.Controllers;
 public class HomeController : Controller
 {
     private readonly IUNFClient _unfClient;
+    private readonly PostRequestHandler _handler;
 
-
-    public HomeController(IUNFClient unfClient)
+    public HomeController(IUNFClient unfClient, PostRequestHandler handler)
     {
         _unfClient = unfClient;
+        _handler = handler;
     }
     
     [HttpGet]

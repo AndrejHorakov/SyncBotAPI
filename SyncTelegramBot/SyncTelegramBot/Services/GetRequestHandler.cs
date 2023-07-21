@@ -6,7 +6,7 @@ namespace SyncTelegramBot.Services;
 
 public class GetRequestHandler
 {
-    public async Task<AnswerFromAPI> GetList(IUNFClient unfClient, string? keyEntity, string? addOptions, ReceiptRequestHandler handler)
+    public async Task<AnswerFromAPI> GetList(IUNFClient unfClient, string? keyEntity, string? addOptions, PostRequestHandler handler)
     {
         var filter = await ParseOptionsToRequestString(addOptions!, unfClient, handler);
         if (keyEntity.Contains("?$filter="))
@@ -53,7 +53,7 @@ public class GetRequestHandler
         return new (){ Answer = builder.ToString() };
     }
 
-    private async Task<string> ParseOptionsToRequestString(string? addOptions, IUNFClient unfClient, ReceiptRequestHandler handler)
+    private async Task<string> ParseOptionsToRequestString(string? addOptions, IUNFClient unfClient, PostRequestHandler handler)
     {
         var builder = new StringBuilder();
         
