@@ -1,9 +1,18 @@
+using System.Text.Json.Serialization;
+
 namespace SyncTelegramBot.Models.Entities;
 
-public record VATRate(string СтавкиНДС, string Description)
+public class VATRate
 {
+    [JsonPropertyName("ВидСтавкиНДС")]
+    public string VatRate { get; set; }
+    
+    [JsonPropertyName("Description")]
+    public string Description { get; set; }
+
     public override string ToString()
     {
-        return $"{Description} {СтавкиНДС}";
+        return $"{VatRate}*{Description}";
     }
+    
 }

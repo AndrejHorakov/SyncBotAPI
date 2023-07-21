@@ -1,9 +1,14 @@
+using System.Text.Json.Serialization;
+
 namespace SyncTelegramBot.Models.Entities;
 
-public record Correspondence(string Code, string Description, string ТипСчета)
+public class Correspondence : CodeAndDescription
 {
+    [JsonPropertyName("ТипСчета")]
+    public string AccountType { get; set; }
+    
     public override string ToString()
     {
-        return $"{Code.Trim()} {Description} {ТипСчета}";
+        return $"{Code}*{Description}*{AccountType}";
     }
 }
