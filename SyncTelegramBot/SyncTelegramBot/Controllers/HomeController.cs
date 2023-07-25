@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using SyncTelegramBot.Models.HelpModels;
 using SyncTelegramBot.Models.PostModels;
 using SyncTelegramBot.Services;
@@ -10,13 +11,13 @@ namespace SyncTelegramBot.Controllers;
 [Route("[controller]")]
 public class HomeController : Controller
 {
-    private readonly IUNFClient _unfClient;
-    private readonly PostRequestHandler _handler;
+    private readonly IUnfClient _unfClient;
+    private readonly RequestValues _requestValues;
 
-    public HomeController(IUNFClient unfClient, PostRequestHandler handler)
+    public HomeController(IUnfClient unfClient, IOptions<RequestValues> requestValues)
     {
         _unfClient = unfClient;
-        _handler = handler;
+        _requestValues = requestValues.Value;
     }
     
     [HttpGet]
@@ -24,31 +25,33 @@ public class HomeController : Controller
 
     public async Task<JsonResult> GetList([FromQuery]string? entity, [FromQuery]string? addOptions, GetRequestHandler getRequestHandler)
     {
-        return Json(await getRequestHandler.GetList(_unfClient, entity, addOptions, _handler));
+        return Json(await getRequestHandler.GetList(InitializeHandler(new ()), entity, addOptions));
     }
 
     [HttpPost]
     [Route("Income")]
-    public async Task<JsonResult> SaveReceipt([FromBody] PostFromBotModel postModel, PostRequestsService postService)
+    public async Task<JsonResult> SaveReceipt([FromBody] PostFromBotModel postModel)
     {
         postModel.Type = PostType.Receive;
-        return Json(await postService.SaveReceipt(_unfClient, postModel, _handler));
+        return Json(await PostRequestsService.SaveReceipt(InitializeHandler(postModel)));
     }
     
     [HttpPost]
     [Route("Expense")]
-    public async Task<JsonResult> SaveExpense([FromBody] PostFromBotModel postModel, PostRequestsService postService)
+    public async Task<JsonResult> SaveExpense([FromBody] PostFromBotModel postModel)
     {
         postModel.Type = PostType.Expense;
-        return Json(await postService.SaveExpense(_unfClient, postModel, _handler));
+        return Json(await PostRequestsService.SaveExpense(InitializeHandler(postModel)));
     }
     
     [HttpPost]
     [Route("Move")]
-    public async Task<JsonResult> SaveMove([FromBody] PostFromBotModel postModel, PostRequestsService postService)
+    public async Task<JsonResult> SaveMove([FromBody] PostFromBotModel postModel)
     {
         postModel.Type = PostType.Move;
-        return Json(await postService.SaveMove(_unfClient, postModel, _handler));
-
+        return Json(await PostRequestsService.SaveMove(InitializeHandler(postModel)));
     }
+
+    private Handler InitializeHandler(PostFromBotModel postFromBotModel) =>
+        new(_unfClient, postFromBotModel, new (), _requestValues.DefaultMultiplicity, _requestValues.DefaultExchangeRate);
 }

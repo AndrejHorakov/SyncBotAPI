@@ -1,43 +1,46 @@
 using SyncTelegramBot.Models.Entities;
-using SyncTelegramBot.Models.PostModels;
+using SyncTelegramBot.Models.Exceptions;
 using SyncTelegramBot.Models.PostToUNFModels;
 using SyncTelegramBot.Services;
-using SyncTelegramBot.Services.Abstractions;
 
 namespace SyncTelegramBot.Models.HelpModels;
 
 public static class StaticStructures
 {
-    public static readonly Dictionary<string, Func<PostToUNFModel, string, PostType, IUNFClient, Task>> DocumentInfo = new()
+    public static readonly Dictionary<string, Func<Handler, Task<Result<Handler, ValidationException>>>> DocumentInfo = new()
     {
-        ["Накладная"] =  (model, document, type, unfClient) =>  type switch
+        ["Накладная"] =  handler =>  handler.PostFromBotModel.Type switch
             {
-                PostType.Expense => HandleDecryptionAsync(5, model, document,
-                    unfClient,"СуммаДокумента",  2, str=> str,  "Расходная"),
-                _ => HandleDecryptionAsync(5, model, document, unfClient, "СуммаДокумента",2, str=> str, "Приходная")
+                PostType.Expense => HandleDecryptionAsync(
+                    5, handler,"СуммаДокумента",  2, str=> str,  "Расходная"),
+                _ => HandleDecryptionAsync(
+                    5, handler, "СуммаДокумента",2, str=> str, "Приходная")
             },
-        ["ЗаказПокупателя"] = async (model, document, type, unfClient) => await HandleDecryptionAsync(3, model, document,
-            unfClient, "ВидОперации", 1, str => $"'{str}'"),
-        ["ПоступлениеНаСчет"] = async (model, document, type, unfClient) => await HandleDecryptionAsync(4, model, document,
-            unfClient, "СуммаДокумента", 2, str => str),
-        ["АктВыполненныхРабот"] = async (model, document, type, unfClient) => await HandleDecryptionAsync(3, model, document,
-            unfClient , "ИдентификаторПлатежа", 1, str => $"'{str}'"),
-        ["КорректировкаРеализации"] = async (model, document, type, unfClient) => await HandleDecryptionAsync(3, model, document,
-            unfClient, "ВидОперации", 1, str => $"'{str}'"),
+        ["ЗаказПокупателя"] = async handler =>
+            await HandleDecryptionAsync(3, handler, "ВидОперации", 1, str => $"'{str}'"),
+        ["ПоступлениеНаСчет"] =
+            async handler => await HandleDecryptionAsync(4, handler, "СуммаДокумента", 2, str => str),
+        ["АктВыполненныхРабот"] = async handler =>
+            await HandleDecryptionAsync(3, handler, "ИдентификаторПлатежа", 1, str => $"'{str}'"),
+        ["КорректировкаРеализации"] = async handler =>
+            await HandleDecryptionAsync(3, handler, "ВидОперации", 1, str => $"'{str}'"),
     };
 
-    private static async Task<string?> HandleDecryptionAsync(int slices, PostToUNFModel model,  string? entity,
-        IUNFClient unfClient, string secondParameter, int numberSecondParameter, Func<string, string> formatter, string? typeInvoice = null)
+    private static async Task<Result<Handler, ValidationException>> HandleDecryptionAsync(int slices, Handler handler,
+        string secondParameter, int numberSecondParameter, Func<string, string> formatter, string? typeInvoice = null)
     {
-        var splitDecryption = entity?.Split('*');
+        var splitDecryption = handler.PostFromBotModel.DocumentFromDecryptionOfPayment?.Split('*');
         if (splitDecryption?.Length != slices)
-            return null;
-        model.Decryption ??= new DecryptionPayment[] { new() { LineNumber = "1" } };
-        model.Decryption[0].DocumentType = $"StandardODATA.Document_{typeInvoice+splitDecryption[^1]}";
-        model.Decryption[0].Document = await unfClient.GetGuidFirst(
+            return new ValidationException("Неверно введен документ");
+        handler.Model.Decryption ??= new DecryptionPayment[] { new() { LineNumber = "1" } };
+        handler.Model.Decryption[0].DocumentType = $"StandardODATA.Document_{typeInvoice+splitDecryption[^1]}";
+        handler.Model.Decryption[0].Document = await handler.UnfClient.GetGuidFirst(
             $"Document_{typeInvoice+splitDecryption[^1]}?$filter=Number eq '{splitDecryption[0]}' and {secondParameter} eq {formatter(splitDecryption[numberSecondParameter])}");
+
+        if (handler.Model.Decryption[0].Document is null)
+            return new ValidationException("Документ не найден");
         //СуммаДокумента
-        return model.Decryption[0].Document;
+        return handler;
     }
     
     public static readonly HashSet<string> AmountTypes = new()
@@ -47,25 +50,25 @@ public static class StaticStructures
     
     public static readonly Dictionary<string, Type> Types = new()
     {
-        ["Catalog_Валюты"] = typeof(AnswerFromUNF<Currency>),
-        ["Catalog_СтавкиНДС"] = typeof(AnswerFromUNF<VATRate>),
-        ["Document_РасходСоСчета"] = typeof(AnswerFromUNF<Expense>),
-        ["Document_РасходИзКассы"] = typeof(AnswerFromUNF<Expense>),
-        ["Catalog_Сотрудники"] = typeof(AnswerFromUNF<OnlyDescription>),
-        ["Catalog_Организации"] = typeof(AnswerFromUNF<OnlyDescription>),
-        ["Document_ЗаказПокупателя"] = typeof(AnswerFromUNF<BuyerOrder>),
-        ["Document_ПриходнаяНакладная"] = typeof(AnswerFromUNF<Invoice>),
-        ["Document_РасходнаяНакладная"] = typeof(AnswerFromUNF<Invoice>),
-        ["Catalog_ВидыНалогов"] = typeof(AnswerFromUNF<CodeAndDescription>),
-        ["Catalog_Контрагенты"] = typeof(AnswerFromUNF<CodeAndDescription>),
-        ["Catalog_БанковскиеСчета"] = typeof(AnswerFromUNF<CodeAndDescription>),
-        ["Document_ДоговорКредитаИЗайма"] = typeof(AnswerFromUNF<LoanAgreement>),
-        ["Document_ПоступлениеНаСчет"] = typeof(AnswerFromUNF<CodeAndDescription>),
-        ["ChartOfAccounts_Управленческий"] = typeof(AnswerFromUNF<Correspondence>),
-        ["Document_АктВыполненныхРабот"] = typeof(AnswerFromUNF<ActCompletedWork>),
-        ["Catalog_ДоговорыКонтрагентов"] = typeof(AnswerFromUNF<CodeAndDescription>),
-        ["Document_КорректировкаРеализации"] = typeof(AnswerFromUNF<CorrectImplementation>),
-        ["Document_ПоступлениеНаСчет?$filter=ВидОперации eq 'ОтПокупателя'"] = typeof(AnswerFromUNF<ReceiveInAccount>),
+        ["Catalog_Валюты"] = typeof(AnswerFromUnf<Currency>),
+        ["Catalog_СтавкиНДС"] = typeof(AnswerFromUnf<VatRate>),
+        ["Document_РасходСоСчета"] = typeof(AnswerFromUnf<Expense>),
+        ["Document_РасходИзКассы"] = typeof(AnswerFromUnf<Expense>),
+        ["Catalog_Сотрудники"] = typeof(AnswerFromUnf<OnlyDescription>),
+        ["Catalog_Организации"] = typeof(AnswerFromUnf<OnlyDescription>),
+        ["Document_ЗаказПокупателя"] = typeof(AnswerFromUnf<BuyerOrder>),
+        ["Document_ПриходнаяНакладная"] = typeof(AnswerFromUnf<Invoice>),
+        ["Document_РасходнаяНакладная"] = typeof(AnswerFromUnf<Invoice>),
+        ["Catalog_ВидыНалогов"] = typeof(AnswerFromUnf<CodeAndDescription>),
+        ["Catalog_Контрагенты"] = typeof(AnswerFromUnf<CodeAndDescription>),
+        ["Catalog_БанковскиеСчета"] = typeof(AnswerFromUnf<CodeAndDescription>),
+        ["Document_ДоговорКредитаИЗайма"] = typeof(AnswerFromUnf<LoanAgreement>),
+        ["Document_ПоступлениеНаСчет"] = typeof(AnswerFromUnf<CodeAndDescription>),
+        ["ChartOfAccounts_Управленческий"] = typeof(AnswerFromUnf<Correspondence>),
+        ["Document_АктВыполненныхРабот"] = typeof(AnswerFromUnf<ActCompletedWork>),
+        ["Catalog_ДоговорыКонтрагентов"] = typeof(AnswerFromUnf<CodeAndDescription>),
+        ["Document_КорректировкаРеализации"] = typeof(AnswerFromUnf<CorrectImplementation>),
+        ["Document_ПоступлениеНаСчет?$filter=ВидОперации eq 'ОтПокупателя'"] = typeof(AnswerFromUnf<ReceiveInAccount>),
     };
     
     public static readonly Dictionary<string, List<string>> ListEntities = new()
@@ -94,179 +97,226 @@ public static class StaticStructures
         },
     };
 
-    public static readonly Dictionary<string, Func<PostToUNFModel, PostFromBotModel, PostRequestHandler, Task<bool>>>
+    public static readonly Dictionary<string, Func<Result<Handler, ValidationException>, Task<Result<Handler, ValidationException>>>>
         HandledOperations = new()
         {
-            ["ОтПокупателя"] = async (model, postBotModel, handler) =>
+            ["ОтПокупателя"] = async handlerResult =>
             {
-                // var init = Option<T>();
-                // model.TryAddContragent()
-                //     .AddDescription()
-                //     .adfsljsdaflsda();
-                
-                if (await handler.HandleContragentAsync(model, postBotModel.Contragent!) is null) return false;
-                if (await handler.HandleDecryptionContractAsync(model, model.Contragent!,
-                        postBotModel.ContractFromDecryptionOfPayment!) is null) return false;
-                return true;
+                await handlerResult.HandleContragentAsync();
+                await handlerResult.HandleDecryptionContractAsync();
+                return handlerResult;
             },
-            ["Прочее"] = async (model, postBotModel, handler) =>
+            ["Прочее"] = async handlerResult =>
             {
-                return await handler.HandleCorrespondenceAsync(model, postBotModel.Correspondence!) is not null;
+                await handlerResult.HandleCorrespondenceAsync();
+                return handlerResult;
             },
-            ["ОтПоставщика"] = async (model, postBotModel, handler) =>
+            ["ОтПоставщика"] = async handlerResult =>
             {
-                if (await handler.HandleContragentAsync(model, postBotModel.Contragent!) is null) return false;
-                if (await handler.HandleDecryptionContractAsync(model, model.Contragent!, postBotModel.ContractFromDecryptionOfPayment!) is null) return false;
-                if (await handler.HandleDecryptionDocumentAsync(model,
-                        postBotModel.DocumentFromDecryptionOfPayment!, postBotModel.Type) is null) return false;
-                return true;
+                await handlerResult.HandleContragentAsync();
+                await handlerResult.HandleDecryptionContractAsync();
+                await handlerResult.HandleDecryptionDocumentAsync();
+                return handlerResult;
             },
-            ["РасчетыПоКредитам"] = async (model, postBotModel, handler) =>
+            ["РасчетыПоКредитам"] = async handlerResult =>
             {
-                if (await handler.HandleContragentAsync(model, postBotModel.Contragent!) is null) return false;
-                if (await handler.HandleLoanAgreementAsync(model, postBotModel.LoanAgreement!) is null) return false;
+                await handlerResult.HandleContragentAsync();
+                await handlerResult.HandleLoanAgreementAsync();
 
-                if (postBotModel.Type is PostType.Expense)
+                return await handlerResult.Match(async handler =>
                 {
-                    if (await handler.HandleDecryptionContractAsync(model, model.Contragent!,
-                            postBotModel.ContractFromDecryptionOfPayment!) is null) return false;
-                    if (await handler.HandleVATRateAsync(model, postBotModel.VATRate!) is null) return false;
-                    if ( handler.HandleAmountType(model, postBotModel.AmountType!) is null) return false;
-                }
-                
-                return true;
+                    if (handler.PostFromBotModel.Type is PostType.Expense)
+                    {
+                        await handlerResult.HandleDecryptionContractAsync();
+                        await handlerResult.HandleVatRateAsync();
+                        await handlerResult.HandleAmountType();
+                    }
+                    return handlerResult;
+                },
+                failure => Task.FromResult<Result<Handler, ValidationException>>(failure));
             },
-            ["ВозвратЗаймаСотрудником"] = async (model, postBotModel, handler) =>
+            ["ВозвратЗаймаСотрудником"] = async handlerResult =>
             {
-                if (await handler.HandleLoanAgreementAsync(model, postBotModel.LoanAgreement!) is null) return false;
-                if (await handler.HandleEmployeeAsync(model, postBotModel.Employee!) is null) return false;
-                if (handler.HandleAmountType(model, postBotModel.AmountType!) is null) return false;
-                return true;
+                await handlerResult.HandleLoanAgreementAsync();
+                await handlerResult.HandleEmployeeAsync();
+                await handlerResult.HandleAmountType();
+                return handlerResult;
             },
-            ["ПокупкаВалюты"] = async (model, postBotModel, handler) =>
+            ["ПокупкаВалюты"] = async handlerResult =>
             {
-                if (await handler.HandleCorrespondenceAsync(model, postBotModel.Correspondence!) is null) return false;
-                if (await handler.HandleCurrencyAsync(model, postBotModel.Currency!) is null) return false;
-                return true;
+                await handlerResult.HandleCorrespondenceAsync();
+                await handlerResult.HandleCurrencyAsync();
+                return handlerResult;
             },
-            ["ПолучениеНаличныхВБанке"] = async (model, postBotModel, handler) =>
+            ["ПолучениеНаличныхВБанке"] = async handlerResult =>
             {
-                return await handler.HandleOrganisationAccountAsync(model,
-                    postBotModel.OrganisationAccount!) is not null;
+                await handlerResult.HandleOrganisationAccountAsync();
+                return handlerResult;
             },
-            ["ПрочиеРасчеты"] = async (model, postBotModel, handler) =>
+            ["ПрочиеРасчеты"] = async handlerResult =>
             {
-                if (await handler.HandleContragentAsync(model, postBotModel.Contragent!) is null) return false;
-                if (await handler.HandleCorrespondenceAsync(model, postBotModel.Correspondence!) is null) return false;
-                if (await handler.HandleDecryptionContractAsync(model, model.Contragent!, postBotModel.ContractFromDecryptionOfPayment!) is null) return false;
-                if (postBotModel.Type is PostType.Expense)
-                    if (await handler.HandleVATRateAsync(model, postBotModel.VATRate!) is null) return false;
-                return true;
+                await handlerResult.HandleContragentAsync();
+                await handlerResult.HandleCorrespondenceAsync();
+                await handlerResult.HandleDecryptionContractAsync();
+                return await handlerResult.Match(async handler =>
+                {
+                    if (handler.PostFromBotModel.Type is PostType.Expense)
+                        await handlerResult.HandleVatRateAsync();
+                    return handlerResult;
+                },
+                    failure => Task.FromResult<Result<Handler, ValidationException>>(failure));
             },
-            ["ОтПодотчетника"] = async (model, postBotModel, handler) =>
+            ["ОтПодотчетника"] = async handlerResult =>
             {
-                if (await handler.HandleEmployeeAsync(model, postBotModel.Employee!) is null) return false;
-                if (await handler.HandleContractAsync(model, postBotModel.Contract!) is null) return false;
-                return true;
+                await handlerResult.HandleEmployeeAsync();
+                await handlerResult.HandleContractAsync();
+                return handlerResult;
             },
-            ["ЛичныеСредстваПредпринимателя"] = async (model, postBotModel, handler) =>
+            ["ЛичныеСредстваПредпринимателя"] = async handlerResult =>
             {
-                if (await handler.HandleCorrespondenceAsync(model, postBotModel.Correspondence!) is null) return false;
-                if (await handler.HandleOrganisationAsync(model, postBotModel.Organisation!) is null) return false;
-                return true;
+                await handlerResult.HandleCorrespondenceAsync();
+                await handlerResult.HandleOrganisationAsync();
+                return handlerResult;
             },
-            ["ОтНашейОрганизации"] = async (model, postBotModel, handler) =>
+            ["ОтНашейОрганизации"] = async handlerResult =>
             {
-                if (await handler.HandleContragentAsync(model, postBotModel.Contragent!) is null) return false;
-                if (await handler.HandleDecryptionContractAsync(model, model.Contragent!, postBotModel.ContractFromDecryptionOfPayment!) is null) return false;
-                return true;
+                await handlerResult.HandleContragentAsync();
+                await handlerResult.HandleDecryptionContractAsync();
+                return handlerResult;
             },
-            
-            
-            ["Поставщику"] = async (model, postBotModel, handler) =>
+
+            ["Поставщику"] = async handlerResult =>
             {
-                if (!await HandledOperations["ОтПокупателя"](model, postBotModel, handler)) return false;
-                if (await handler.HandleVATRateAsync(model, postBotModel.VATRate!) is null) return false;
-                return true;
+                await HandledOperations["ОтПокупателя"](handlerResult);
+                await handlerResult.HandleVatRateAsync();
+                return handlerResult;
             },
-            ["НаРасходы"] = async (model, postBotModel, handler) =>
+            ["НаРасходы"] = async handlerResult =>
             {
-                return await HandledOperations["Прочее"](model, postBotModel, handler);
+                await HandledOperations["Прочее"](handlerResult);
+                return handlerResult;
             },
-            ["НашейОрганизации"] = async (model, postBotModel, handler) =>
+            ["НашейОрганизации"] = async handlerResult =>
             {
-                return await HandledOperations["Поставщику"](model, postBotModel, handler);
+                await HandledOperations["Поставщику"](handlerResult);
+                return handlerResult;
             }, 
-            ["ЗарплатаСотруднику"] = async (model, postBotModel, handler) =>
+            ["ЗарплатаСотруднику"] = async handlerResult =>
             {
-                return await handler.HandleEmployeeAsync(model, postBotModel.Employee) is not null;
+                await handlerResult.HandleEmployeeAsync();
+                return handlerResult;
             },
-            ["Покупателю"] = async (model, postBotModel, handler) =>
+            ["Покупателю"] = async handlerResult =>
             {
-                if (!await HandledOperations["ОтПоставщика"](model, postBotModel, handler)) return false;
-                if (await handler.HandleVATRateAsync(model, postBotModel.VATRate!) is null) return false;
-                return true;
+                await HandledOperations["ОтПоставщика"](handlerResult);
+                await handlerResult.HandleVatRateAsync();
+                return handlerResult;
             }, 
-            ["ВыдачаЗаймаСотруднику"] = async (model, postBotModel, handler) =>
+            ["ВыдачаЗаймаСотруднику"] = async handlerResult =>
             {
-                if (await handler.HandleEmployeeAsync(model, postBotModel.Employee!) is null) return false;
-                if (await handler.HandleLoanAgreementAsync(model, postBotModel.LoanAgreement!) is null) return false;
-                return true;
+                await handlerResult.HandleEmployeeAsync();
+                await handlerResult.HandleLoanAgreementAsync();
+                return handlerResult;
             },
-            ["ВзносНаличнымиВБанк"] = async (model, postBotModel, handler) =>
+            ["ВзносНаличнымиВБанк"] = async handlerResult =>
             {
-                if (await handler.HandleCorrespondenceAsync(model, postBotModel.Correspondence!) is null) return false;
-                if (await handler.HandleOrganisationAccountAsync(model, postBotModel.OrganisationAccount!) is null) return false;
-                return true;
+                await handlerResult.HandleCorrespondenceAsync();
+                await handlerResult.HandleOrganisationAccountAsync();
+                return handlerResult;
             },
-            ["Подотчетнику"] = async (model, postBotModel, handler) =>
+            ["Подотчетнику"] = async handlerResult =>
             {
-                return await HandledOperations["ЗарплатаСотруднику"](model, postBotModel, handler);
+                await HandledOperations["ЗарплатаСотруднику"](handlerResult);
+                return handlerResult;
             },
-            ["Налоги"] = async (model, postBotModel, handler) =>
+            ["Налоги"] = async handlerResult =>
             {
-                if (await handler.HandleContragentAsync(model, postBotModel.Contragent!) is null) return false;
-                if (await handler.HandleTaxTypeAsync(model, postBotModel.TypeOfTax!) is null) return false;
-                return true;
+                await handlerResult.HandleContragentAsync();
+                await handlerResult.HandleTaxTypeAsync();
+                await handlerResult.HandlePaymentDeadline();
+                return handlerResult;
             },
-            ["МеждуКассами"] = async (model, postBotModel, handler) =>
+            ["МеждуКассами"] = Task.FromResult,
+            ["МеждуСчетами"] = async handlerResult =>
             {
-                return true;
-            },
-            ["МеждуСчетами"] = async (model, postBotModel, handler) =>
-            {
-                handler.HandleDefault(model, "ПереводНаДругойСчет", postBotModel.Amount);
-                if (await handler.HandleOrganisationAccountAsync(model, postBotModel.ContragentAccount!) is null) return false;
-                model.ContragentAccount = model.OrganisationAccount;
-                model.OrganisationAccount = null;
-                return true;
+                return await handlerResult.Match(async handler =>
+                {
+                    handler.Model = new (handler.PostFromBotModel.Amount, "ПереводНаДругойСчет", DateTime.Now);
+                    await handlerResult.HandleOrganisationAccountAsync();
+                        
+                    handler.Model.ContragentAccount = handler.Model.OrganisationAccount;
+                    handler.Model.OrganisationAccount = null;
+                    return handlerResult;
+                },
+                    failure => Task.FromResult<Result<Handler, ValidationException>>(failure));
             },
         };
 
-    public static Dictionary<string, Func<string, PostRequestHandler, Task<string?>>> HandleOptionKey = new()
+    public static readonly Dictionary<string, Func<Result<Handler, ValidationException>, string, Task<Result<string,ValidationException>>>> HandleOptionKey = new()
     {
-        ["Контрагент_Key"] = async (contragent, handler) => 
-            $"guid'{await handler.HandleContragentAsync(new PostToUNFModel(), contragent)}'",
-        
-        ["Owner"] = async (contragent, handler) =>
+        ["Контрагент_Key"] = async (handler, entity) =>
         {
-            var guid = await handler.HandleContragentAsync(new PostToUNFModel(), contragent);
-            return $"cast(guid'{guid}', 'Catalog_Контрагенты')";
+            handler.ChangeValue(new Handler(handler.Value!.UnfClient, new() { Contragent = entity }, new PostToUnfModel(),
+                0, 0));
+            var result = await handler.HandleContragentAsync();
+            return await HandleResult(result, str => $"guid'{str}'", handler.Value!.Model.Contragent!);
         },
         
-        ["Сотрудник_Key"] = async (employee, handler) => 
-            $"guid'{await handler.HandleEmployeeAsync(new PostToUNFModel(), employee)}'",
+        ["Owner"] = async (handler, entity) =>
+        {
+            handler.ChangeValue(new Handler(handler.Value!.UnfClient, new() { Contragent = entity }, new PostToUnfModel(),
+                0, 0));
+            var result = await handler.HandleContragentAsync();
+            return await HandleResult(result, str => $"cast(guid'{str}', 'Catalog_Контрагенты')", handler.Value!.Model.Contragent!);
+        },
         
-        ["Подотчетник_Key"] = async (employee, handler) => 
-            $"guid'{await handler.HandleEmployeeAsync(new PostToUNFModel(), employee)}'",
+        ["Сотрудник_Key"] = async (handler, entity) =>
+            {
+                handler.ChangeValue(new Handler(handler.Value!.UnfClient, new() { Employee = entity }, new PostToUnfModel(),
+                    0, 0));
+                var result = await handler.HandleEmployeeAsync();
+                return await HandleResult(result, str => $"guid'{str}'", handler.Value!.Model.Employee!);
+            },
         
-        ["ВидНалога_Key"] = async (taxType, handler) => 
-            $"guid'{await handler.HandleTaxTypeAsync(new PostToUNFModel(), taxType)}'",
+        ["Подотчетник_Key"] = async (handler, entity) =>
+            {
+                handler.ChangeValue(new Handler(handler.Value!.UnfClient, new() { Employee = entity }, new PostToUnfModel(),
+                    0, 0));
+                var result = await handler.HandleEmployeeAsync();
+                return await HandleResult(result, str => $"guid'{str}'", handler.Value!.Model.Employee!);
+            },
+
+        ["ВидНалога_Key"] = async (handler, entity) =>
+            {
+                handler.ChangeValue(new Handler(handler.Value!.UnfClient, new() { TypeOfTax = entity }, new PostToUnfModel(),
+                    0, 0));
+                var result = await handler.HandleTaxTypeAsync();
+                return await HandleResult(result, str => $"guid'{str}'", handler.Value!.Model.TypeOfTax!);
+            },
         
-        ["СтавкаНДС_Key"] = async (vatRate, handler) => 
-            $"guid'{await handler.HandleVATRateAsync(new PostToUNFModel(), vatRate)}'",
+        ["СтавкаНДС_Key"] = async (handler, entity) =>
+            {
+                handler.ChangeValue(new Handler(handler.Value!.UnfClient, new() { VatRate = entity }, new PostToUnfModel(),
+                    0, 0));
+                var result = await handler.HandleVatRateAsync();
+                return await HandleResult(result, str => $"guid'{str}'", handler.Value!.Model.Decryption![0].VatRate!);
+            },
         
-        ["СчетКонтрагента_Key"] = async (contragentAccount, handler) => 
-            $"guid'{await handler.HandleOrganisationAccountAsync(new PostToUNFModel(), contragentAccount)}'",
+        ["СчетКонтрагента_Key"] = async (handler, entity) =>
+            {
+                handler.ChangeValue(new Handler(handler.Value!.UnfClient, new() { OrganisationAccount = entity }, new PostToUnfModel(),
+                    0, 0));
+                var result = await handler.HandleOrganisationAccountAsync();
+                return await HandleResult(result, str => $"guid'{str}'", handler.Value!.Model.OrganisationAccount!);
+            },
     };
+
+    private static async Task<Result<string, ValidationException>> HandleResult(Result<Handler, ValidationException> result,
+        Func<string, string> formatter, string entity) => await result.Match<Task<Result<string, ValidationException>>>(
+        _ => Task.FromResult<Result<string, ValidationException>>(formatter(entity)),
+        failure =>
+        {
+            result.ErrorWasOccured(failure);
+            return Task.FromResult<Result<string, ValidationException>>("");
+        });
 }

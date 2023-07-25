@@ -6,10 +6,8 @@ using SyncTelegramBot.Services.Abstractions;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddScoped<IUNFClient, UNFClient>();
+builder.Services.AddScoped<IUnfClient, UnfClient>();
 builder.Services.AddScoped<GetRequestHandler>();
-builder.Services.AddScoped<PostRequestsService>();
-builder.Services.AddScoped<PostRequestHandler>();
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
