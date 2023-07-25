@@ -34,5 +34,5 @@ public class DecryptionPayment
 
     [JsonPropertyName("СтавкаНДС_Key")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public string? VATRate { get; set; }
+    public string? VatRate { get; set; }
 }

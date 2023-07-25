@@ -1,6 +1,6 @@
 namespace SyncTelegramBot.Models.HelpModels;
 
-public class AnswerFromUNF<T> 
+public class AnswerFromUnf<T> 
 {
     public EasyToStringList<T> Value { get; set; }
 
