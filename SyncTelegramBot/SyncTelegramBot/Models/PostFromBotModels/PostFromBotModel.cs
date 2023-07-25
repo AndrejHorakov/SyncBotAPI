@@ -48,12 +48,12 @@ public class PostFromBotModel
     public string? Organisation { get; init; }
     
     [JsonPropertyName("VATRate")]
-    public string? VATRate { get; init; }
+    public string? VatRate { get; init; }
     
     [JsonPropertyName("TypeOfTax")]
     public string? TypeOfTax { get; init; }
     
-    [JsonPropertyName("ContragentAccount")]
-    public string? ContragentAccount { get; init; }
+    [JsonPropertyName("paymentDeadline")]
+    public string? PaymentDeadline { get; init; }
 
 }

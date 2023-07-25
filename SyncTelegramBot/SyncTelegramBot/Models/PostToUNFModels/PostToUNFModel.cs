@@ -3,7 +3,7 @@ using SyncTelegramBot.Models.HelpModels;
 
 namespace SyncTelegramBot.Models.PostToUNFModels;
 
-public class PostToUNFModel
+public class PostToUnfModel
 {
     [JsonRequired]
     [JsonPropertyName("Date")]
@@ -60,7 +60,6 @@ public class PostToUNFModel
     [JsonPropertyName("Курс")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public double? ExchangeRate { get; set; }
-
     
     [JsonPropertyName("Кратность")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
@@ -77,4 +76,22 @@ public class PostToUNFModel
     [JsonPropertyName("СчетКонтрагента_Key")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? ContragentAccount { get; set; }
+    
+    [JsonPropertyName("СрокУплаты")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public DateTime? PaymentDeadline { get; set; }
+
+    //<summary> 
+    //Don't use empty ctor.
+    //This is required for json converting
+    //</summary> 
+    public PostToUnfModel() { } 
+
+    public PostToUnfModel(double amount, string operationType, DateTime date)
+    {
+        Amount = amount;
+        AmountCount = amount;
+        OperationType = operationType;
+        Date = date;
+    }
 }
