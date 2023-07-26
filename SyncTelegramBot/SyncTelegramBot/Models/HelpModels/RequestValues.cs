@@ -1,5 +1,3 @@
-using System.Formats.Tar;
-
 namespace SyncTelegramBot.Models.HelpModels;
 
 public class RequestValues
@@ -9,6 +7,8 @@ public class RequestValues
     public string BaseUri { get; set; }
     
     public string Authorization { get; set; }
+    
+    public string SecretKey { get; set; }
 
     public double DefaultExchangeRate { get; set; }
     

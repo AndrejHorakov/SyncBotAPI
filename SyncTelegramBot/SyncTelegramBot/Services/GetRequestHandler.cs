@@ -1,39 +1,94 @@
+using System.Text;
 using SyncTelegramBot.Models.HelpModels;
-using SyncTelegramBot.Services.Abstractions;
 
 namespace SyncTelegramBot.Services;
 
 public class GetRequestHandler
 {
-    public async Task<AnswerFromAPI> GetList(IUNFClient unfClient, string filter)
+    public async Task<AnswerFromApi> GetList(DataForRequest dataForRequest, string? keyEntity, string? addOptions)
     {
-        AnswerFromAPI res;
-        var ans = await unfClient.GetFromUNF(filter);
-        var entityName = filter.Split(new[] { '/', '\\', '?' })[0];
-        
-        object? output;
+        var filter = await ParseOptionsToRequestString(addOptions!, dataForRequest);
+        if (keyEntity!.Contains("?$filter="))
+            filter = filter.Substring(9, filter.Length-9);
+        return await GetAnswerAsString(dataForRequest, keyEntity, filter);
+    }
+
+    private async Task<AnswerFromApi> GetAnswerAsString(DataForRequest dataForRequest, string? keyEntity, string? filter)
+    {
+        if (string.IsNullOrEmpty(keyEntity))
+            return new()
+            {
+                Answer = "Сущность не задана"
+            };
+        if (!StaticStructures.ListEntities.ContainsKey(keyEntity))
+            return new()
+            {
+                Answer = "На данный момент для отображения этого списка неизвестны его сущности"
+            };
+        var builder = new StringBuilder();
         try
         {
-            if (!StaticStructures.Types.ContainsKey(entityName))
-                res = new()
-                {
-                    Answer = "На данный момент для отображения этого списка неизвестны уникальные параменты"
-                };
-            else
+            foreach (var entity in StaticStructures.ListEntities[keyEntity])
             {
-                var entityType = StaticStructures.Types[entityName];
-                output = await ans.Content.ReadFromJsonAsync(entityType);
-                res = new() { Answer = output?.ToString()};
+                if (!StaticStructures.Types.ContainsKey(entity))
+                {
+                    return new()
+                    {
+                        Answer = $"На данный момент для отображения этого списка неизвестны уникальные параметры одной из сущностей ({entity})"
+                    };
+                }
+                builder.Append(await GetListAsStringAsync(dataForRequest, filter!, entity));
             }
         }
         catch
         {
-            res = new()
+            return new ()
             {
                 Answer = "Произошла непредвиденная ошибка при обработке запроса"
             };
         }
 
-        return res;
+        return new (){ Answer = builder.ToString() };
+    }
+
+    private static async Task<string> ParseOptionsToRequestString(string? addOptions, DataForRequest dataForRequest)
+    {
+        var builder = new StringBuilder();
+
+        if (string.IsNullOrEmpty(addOptions)) return builder.ToString();
+        
+        var keyValueTuples = addOptions
+            .Split(';')
+            .Select(t =>
+            {
+                var p = t.Split('=');
+                return Tuple.Create(p[0], p[1]);
+            });
+        builder.Append("?$filter=");
+        foreach (var (propertyName, propertyValue) in keyValueTuples)
+        {
+            var endPropertyValue = propertyValue;
+            if (StaticStructures.HandleOptionKey.TryGetValue(propertyName, out var func))
+            {
+                var handlingResult = await func(dataForRequest, propertyValue);
+                if (handlingResult.IsError)
+                    return null!;
+                endPropertyValue = handlingResult.Value;
+            }
+                    
+            if (!string.IsNullOrEmpty(propertyValue))
+                builder.Append($"{propertyName} eq {endPropertyValue} and ");
+        }
+        builder.Remove(builder.Length - 5, 5);
+
+        return builder.ToString();
+    }
+
+    private static async Task<string?> GetListAsStringAsync(DataForRequest dataForRequest, string filter, string entity)
+    {
+        var ans = await dataForRequest.UnfClient.GetFromUnf(entity + filter);
+        var entityType = StaticStructures.Types[entity];
+        var output = await ans.Content.ReadFromJsonAsync(entityType);
+        return output?.ToString();
     }
 }

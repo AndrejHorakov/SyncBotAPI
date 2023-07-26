@@ -31,4 +31,8 @@ public class DecryptionPayment
     [JsonPropertyName("ТипСуммы")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? AmountType { get; set; }
+
+    [JsonPropertyName("СтавкаНДС_Key")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? VatRate { get; set; }
 }

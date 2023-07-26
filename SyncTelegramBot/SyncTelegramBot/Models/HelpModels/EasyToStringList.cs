@@ -13,6 +13,6 @@ public class EasyToStringList<T> : List<T>
             builder.Append("\n");
         }
 
-        return builder.ToString();
+        return builder.Replace("\"", "\\\"").ToString();
     }
 }

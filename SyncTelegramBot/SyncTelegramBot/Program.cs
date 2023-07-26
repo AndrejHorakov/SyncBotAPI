@@ -6,9 +6,8 @@ using SyncTelegramBot.Services.Abstractions;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddScoped<IUNFClient, UNFClient>();
+builder.Services.AddScoped<IUnfClient, UnfClient>();
 builder.Services.AddScoped<GetRequestHandler>();
-builder.Services.AddScoped<PostReceiveRequestHandler>();
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -31,6 +30,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.Use(async (ctx, next) =>
+{
+    if (ctx.Request.Headers.TryGetValue("SecretKey", out var secretKey) && secretKey == app.Configuration["RequestStrings:SecretKey"])
+        await next();
+});
 
 app.UseAuthorization();
 
