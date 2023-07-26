@@ -7,25 +7,25 @@ namespace SyncTelegramBot.Services;
 
 public static class PostRequestsService
 {
-    public static async Task<AnswerFromApi> SaveReceipt(Handler handler) =>
-        await Matcher(await ConfigureModel(handler, handler.UnfClient.PostReceipt));
+    public static async Task<AnswerFromApi> SaveReceipt(DataForRequest dataForRequest) =>
+        await Matcher(await ConfigureModel(dataForRequest, dataForRequest.UnfClient.PostReceipt));
     
-    public static async Task<AnswerFromApi> SaveExpense(Handler handler) =>
-        await Matcher(await ConfigureModel(handler, handler.UnfClient.PostExpense));
+    public static async Task<AnswerFromApi> SaveExpense(DataForRequest dataForRequest) =>
+        await Matcher(await ConfigureModel(dataForRequest, dataForRequest.UnfClient.PostExpense));
     
-    public static async Task<AnswerFromApi> SaveMove(Handler handler) =>
-        await Matcher(await ConfigureModel(handler, handler.UnfClient.PostMove));
+    public static async Task<AnswerFromApi> SaveMove(DataForRequest dataForRequest) =>
+        await Matcher(await ConfigureModel(dataForRequest, dataForRequest.UnfClient.PostMove));
 
     private static async Task<AnswerFromApi> Matcher(Result<Task<AnswerFromApi>, ValidationException> result) =>
         await result.Match<Task<AnswerFromApi>>(m => m, failure => Task.FromResult(new AnswerFromApi(failure.Message)));
 
-    private static async Task<Result<Task<AnswerFromApi>, ValidationException>> ConfigureModel(Handler handler,
+    private static async Task<Result<Task<AnswerFromApi>, ValidationException>> ConfigureModel(DataForRequest dataForRequest,
         Func<PostToUnfModel?, Task<HttpResponseMessage?>> func)
     {
-        handler.Model = new PostToUnfModel(handler.PostFromBotModel.Amount, handler.PostFromBotModel.OperationType, DateTime.Now);
-        if (!StaticStructures.HandledOperations.ContainsKey(handler.PostFromBotModel.OperationType))
+        dataForRequest.Model = new PostToUnfModel(dataForRequest.PostFromBotModel.Amount, dataForRequest.PostFromBotModel.OperationType, DateTime.Now);
+        if (!StaticStructures.HandledOperations.ContainsKey(dataForRequest.PostFromBotModel.OperationType))
             return new ValidationException("Ошибка в названии операции, обратитесь к разработчикам");
-        var resultOfHandling = await StaticStructures.HandledOperations[handler.PostFromBotModel.OperationType](handler);
+        var resultOfHandling = await StaticStructures.HandledOperations[dataForRequest.PostFromBotModel.OperationType](dataForRequest);
         return resultOfHandling.Match(async handlerReadyModel =>
         {
             var ans = await func(handlerReadyModel.Model);

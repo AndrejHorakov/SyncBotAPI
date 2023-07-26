@@ -4,7 +4,7 @@ using SyncTelegramBot.Services.Abstractions;
 
 namespace SyncTelegramBot.Models.HelpModels;
 
-public class Handler
+public class DataForRequest
 {
     public IUnfClient UnfClient { get; }
     public PostToUnfModel Model { get; set; }
@@ -12,7 +12,7 @@ public class Handler
     public double DefaultExchangeRate { get; set; }
     public double DefaultMultiplicity { get; set; }
 
-    public Handler(IUnfClient unfClient, PostFromBotModel postFromBotModel, PostToUnfModel postToUnfModel,
+    public DataForRequest(IUnfClient unfClient, PostFromBotModel postFromBotModel, PostToUnfModel postToUnfModel,
         double defaultMultiplicity, double defaultExchangeRate)
     {
         UnfClient = unfClient;

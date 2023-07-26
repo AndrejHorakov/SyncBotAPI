@@ -7,7 +7,7 @@ namespace SyncTelegramBot.Models.HelpModels;
 
 public static class StaticStructures
 {
-    public static readonly Dictionary<string, Func<Handler, Task<Result<Handler, ValidationException>>>> DocumentInfo = new()
+    public static readonly Dictionary<string, Func<DataForRequest, Task<Result<DataForRequest, ValidationException>>>> DocumentInfo = new()
     {
         ["Накладная"] =  handler =>  handler.PostFromBotModel.Type switch
             {
@@ -26,21 +26,21 @@ public static class StaticStructures
             await HandleDecryptionAsync(3, handler, "ВидОперации", 1, str => $"'{str}'"),
     };
 
-    private static async Task<Result<Handler, ValidationException>> HandleDecryptionAsync(int slices, Handler handler,
+    private static async Task<Result<DataForRequest, ValidationException>> HandleDecryptionAsync(int slices, DataForRequest dataForRequest,
         string secondParameter, int numberSecondParameter, Func<string, string> formatter, string? typeInvoice = null)
     {
-        var splitDecryption = handler.PostFromBotModel.DocumentFromDecryptionOfPayment?.Split('*');
+        var splitDecryption = dataForRequest.PostFromBotModel.DocumentFromDecryptionOfPayment?.Split('*');
         if (splitDecryption?.Length != slices)
             return new ValidationException("Неверно введен документ");
-        handler.Model.Decryption ??= new DecryptionPayment[] { new() { LineNumber = "1" } };
-        handler.Model.Decryption[0].DocumentType = $"StandardODATA.Document_{typeInvoice+splitDecryption[^1]}";
-        handler.Model.Decryption[0].Document = await handler.UnfClient.GetGuidFirst(
+        dataForRequest.Model.Decryption ??= new DecryptionPayment[] { new() { LineNumber = "1" } };
+        dataForRequest.Model.Decryption[0].DocumentType = $"StandardODATA.Document_{typeInvoice+splitDecryption[^1]}";
+        dataForRequest.Model.Decryption[0].Document = await dataForRequest.UnfClient.GetGuidFirst(
             $"Document_{typeInvoice+splitDecryption[^1]}?$filter=Number eq '{splitDecryption[0]}' and {secondParameter} eq {formatter(splitDecryption[numberSecondParameter])}");
 
-        if (handler.Model.Decryption[0].Document is null)
+        if (dataForRequest.Model.Decryption[0].Document is null)
             return new ValidationException("Документ не найден");
         //СуммаДокумента
-        return handler;
+        return dataForRequest;
     }
     
     public static readonly HashSet<string> AmountTypes = new()
@@ -97,7 +97,7 @@ public static class StaticStructures
         },
     };
 
-    public static readonly Dictionary<string, Func<Result<Handler, ValidationException>, Task<Result<Handler, ValidationException>>>>
+    public static readonly Dictionary<string, Func<Result<DataForRequest, ValidationException>, Task<Result<DataForRequest, ValidationException>>>>
         HandledOperations = new()
         {
             ["ОтПокупателя"] = async handlerResult =>
@@ -133,7 +133,7 @@ public static class StaticStructures
                     }
                     return handlerResult;
                 },
-                failure => Task.FromResult<Result<Handler, ValidationException>>(failure));
+                failure => Task.FromResult<Result<DataForRequest, ValidationException>>(failure));
             },
             ["ВозвратЗаймаСотрудником"] = async handlerResult =>
             {
@@ -164,7 +164,7 @@ public static class StaticStructures
                         await handlerResult.HandleVatRateAsync();
                     return handlerResult;
                 },
-                    failure => Task.FromResult<Result<Handler, ValidationException>>(failure));
+                    failure => Task.FromResult<Result<DataForRequest, ValidationException>>(failure));
             },
             ["ОтПодотчетника"] = async handlerResult =>
             {
@@ -248,15 +248,15 @@ public static class StaticStructures
                     handler.Model.OrganisationAccount = null;
                     return handlerResult;
                 },
-                    failure => Task.FromResult<Result<Handler, ValidationException>>(failure));
+                    failure => Task.FromResult<Result<DataForRequest, ValidationException>>(failure));
             },
         };
 
-    public static readonly Dictionary<string, Func<Result<Handler, ValidationException>, string, Task<Result<string,ValidationException>>>> HandleOptionKey = new()
+    public static readonly Dictionary<string, Func<Result<DataForRequest, ValidationException>, string, Task<Result<string,ValidationException>>>> HandleOptionKey = new()
     {
         ["Контрагент_Key"] = async (handler, entity) =>
         {
-            handler.ChangeValue(new Handler(handler.Value!.UnfClient, new() { Contragent = entity }, new PostToUnfModel(),
+            handler.ChangeValue(new DataForRequest(handler.Value!.UnfClient, new() { Contragent = entity }, new PostToUnfModel(),
                 0, 0));
             var result = await handler.HandleContragentAsync();
             return await HandleResult(result, str => $"guid'{str}'", handler.Value!.Model.Contragent!);
@@ -264,7 +264,7 @@ public static class StaticStructures
         
         ["Owner"] = async (handler, entity) =>
         {
-            handler.ChangeValue(new Handler(handler.Value!.UnfClient, new() { Contragent = entity }, new PostToUnfModel(),
+            handler.ChangeValue(new DataForRequest(handler.Value!.UnfClient, new() { Contragent = entity }, new PostToUnfModel(),
                 0, 0));
             var result = await handler.HandleContragentAsync();
             return await HandleResult(result, str => $"cast(guid'{str}', 'Catalog_Контрагенты')", handler.Value!.Model.Contragent!);
@@ -272,7 +272,7 @@ public static class StaticStructures
         
         ["Сотрудник_Key"] = async (handler, entity) =>
             {
-                handler.ChangeValue(new Handler(handler.Value!.UnfClient, new() { Employee = entity }, new PostToUnfModel(),
+                handler.ChangeValue(new DataForRequest(handler.Value!.UnfClient, new() { Employee = entity }, new PostToUnfModel(),
                     0, 0));
                 var result = await handler.HandleEmployeeAsync();
                 return await HandleResult(result, str => $"guid'{str}'", handler.Value!.Model.Employee!);
@@ -280,7 +280,7 @@ public static class StaticStructures
         
         ["Подотчетник_Key"] = async (handler, entity) =>
             {
-                handler.ChangeValue(new Handler(handler.Value!.UnfClient, new() { Employee = entity }, new PostToUnfModel(),
+                handler.ChangeValue(new DataForRequest(handler.Value!.UnfClient, new() { Employee = entity }, new PostToUnfModel(),
                     0, 0));
                 var result = await handler.HandleEmployeeAsync();
                 return await HandleResult(result, str => $"guid'{str}'", handler.Value!.Model.Employee!);
@@ -288,7 +288,7 @@ public static class StaticStructures
 
         ["ВидНалога_Key"] = async (handler, entity) =>
             {
-                handler.ChangeValue(new Handler(handler.Value!.UnfClient, new() { TypeOfTax = entity }, new PostToUnfModel(),
+                handler.ChangeValue(new DataForRequest(handler.Value!.UnfClient, new() { TypeOfTax = entity }, new PostToUnfModel(),
                     0, 0));
                 var result = await handler.HandleTaxTypeAsync();
                 return await HandleResult(result, str => $"guid'{str}'", handler.Value!.Model.TypeOfTax!);
@@ -296,7 +296,7 @@ public static class StaticStructures
         
         ["СтавкаНДС_Key"] = async (handler, entity) =>
             {
-                handler.ChangeValue(new Handler(handler.Value!.UnfClient, new() { VatRate = entity }, new PostToUnfModel(),
+                handler.ChangeValue(new DataForRequest(handler.Value!.UnfClient, new() { VatRate = entity }, new PostToUnfModel(),
                     0, 0));
                 var result = await handler.HandleVatRateAsync();
                 return await HandleResult(result, str => $"guid'{str}'", handler.Value!.Model.Decryption![0].VatRate!);
@@ -304,14 +304,14 @@ public static class StaticStructures
         
         ["СчетКонтрагента_Key"] = async (handler, entity) =>
             {
-                handler.ChangeValue(new Handler(handler.Value!.UnfClient, new() { OrganisationAccount = entity }, new PostToUnfModel(),
+                handler.ChangeValue(new DataForRequest(handler.Value!.UnfClient, new() { OrganisationAccount = entity }, new PostToUnfModel(),
                     0, 0));
                 var result = await handler.HandleOrganisationAccountAsync();
                 return await HandleResult(result, str => $"guid'{str}'", handler.Value!.Model.OrganisationAccount!);
             },
     };
 
-    private static async Task<Result<string, ValidationException>> HandleResult(Result<Handler, ValidationException> result,
+    private static async Task<Result<string, ValidationException>> HandleResult(Result<DataForRequest, ValidationException> result,
         Func<string, string> formatter, string entity) => await result.Match<Task<Result<string, ValidationException>>>(
         _ => Task.FromResult<Result<string, ValidationException>>(formatter(entity)),
         failure =>

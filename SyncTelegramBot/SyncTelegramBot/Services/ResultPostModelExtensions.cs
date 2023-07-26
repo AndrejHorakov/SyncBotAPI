@@ -6,8 +6,8 @@ namespace SyncTelegramBot.Services;
 
 public static class ResultPostModelExtensions
 {
-    public static async Task<Result<Handler, ValidationException>> HandleContragentAsync(
-        this Result<Handler, ValidationException> handlerResult) =>
+    public static async Task<Result<DataForRequest, ValidationException>> HandleContragentAsync(
+        this Result<DataForRequest, ValidationException> handlerResult) =>
         await Matcher(handlerResult, async handler =>
         {
             var splitContragent = ValidateModelAndInput(handler.PostFromBotModel.Contragent!, 2);
@@ -30,8 +30,8 @@ public static class ResultPostModelExtensions
                 });
         });
 
-    public static async Task<Result<Handler, ValidationException>> HandleDecryptionContractAsync(
-        this Result<Handler, ValidationException> handlerResult) =>
+    public static async Task<Result<DataForRequest, ValidationException>> HandleDecryptionContractAsync(
+        this Result<DataForRequest, ValidationException> handlerResult) =>
         await Matcher(handlerResult, async handler =>
         {
             var splitDecrContract = ValidateModelAndInput(handler.PostFromBotModel.ContractFromDecryptionOfPayment!, 2);
@@ -59,8 +59,8 @@ public static class ResultPostModelExtensions
         });
 
 
-    public static async Task<Result<Handler, ValidationException>> HandleDecryptionDocumentAsync(
-        this Result<Handler, ValidationException> handlerResult) => 
+    public static async Task<Result<DataForRequest, ValidationException>> HandleDecryptionDocumentAsync(
+        this Result<DataForRequest, ValidationException> handlerResult) => 
         await Matcher(handlerResult, async handler =>
         {
             var splitDocument = handler.PostFromBotModel.DocumentFromDecryptionOfPayment!.Split('*');
@@ -85,8 +85,8 @@ public static class ResultPostModelExtensions
 
 
 
-    public static async Task<Result<Handler, ValidationException>> HandleCorrespondenceAsync(
-        this Result<Handler, ValidationException> handlerResult) =>
+    public static async Task<Result<DataForRequest, ValidationException>> HandleCorrespondenceAsync(
+        this Result<DataForRequest, ValidationException> handlerResult) =>
         await Matcher(handlerResult, async handler =>
         {
             var splitCorrespondence = ValidateModelAndInput(handler.PostFromBotModel.Correspondence, 3);
@@ -109,8 +109,8 @@ public static class ResultPostModelExtensions
 
 
 
-    public static async Task<Result<Handler, ValidationException>> HandleLoanAgreementAsync(
-        this Result<Handler, ValidationException> handlerResult) => await Matcher(handlerResult, async handler =>
+    public static async Task<Result<DataForRequest, ValidationException>> HandleLoanAgreementAsync(
+        this Result<DataForRequest, ValidationException> handlerResult) => await Matcher(handlerResult, async handler =>
     {
         var splitLoan = ValidateModelAndInput(handler.PostFromBotModel.LoanAgreement, 3);
         return await splitLoan.Match(async splitLoanAgreement =>
@@ -132,8 +132,8 @@ public static class ResultPostModelExtensions
 
 
 
-    public static async Task<Result<Handler, ValidationException>> HandleEmployeeAsync(
-        this Result<Handler, ValidationException> handlerResult) => await Matcher(handlerResult, async handler =>
+    public static async Task<Result<DataForRequest, ValidationException>> HandleEmployeeAsync(
+        this Result<DataForRequest, ValidationException> handlerResult) => await Matcher(handlerResult, async handler =>
     {
         var splitEmployee = ValidateModelAndInput(handler.PostFromBotModel.Employee, 1);
         return await splitEmployee.Match(async splitValidEmployee =>
@@ -152,8 +152,8 @@ public static class ResultPostModelExtensions
             });
     });
 
-    public static async Task<Result<Handler, ValidationException>> HandleCurrencyAsync(
-        this Result<Handler, ValidationException> handlerResult) => await Matcher(handlerResult, async handler =>
+    public static async Task<Result<DataForRequest, ValidationException>> HandleCurrencyAsync(
+        this Result<DataForRequest, ValidationException> handlerResult) => await Matcher(handlerResult, async handler =>
     {
         var splitCurrency = ValidateModelAndInput(handler.PostFromBotModel.Currency, 2);
         return await splitCurrency.Match(async splitCurrencyArray =>
@@ -180,8 +180,8 @@ public static class ResultPostModelExtensions
             });
     });
 
-    public static async Task<Result<Handler, ValidationException>> HandleOrganisationAsync(
-        this Result<Handler, ValidationException> handlerResult) => await Matcher(handlerResult, async handler =>
+    public static async Task<Result<DataForRequest, ValidationException>> HandleOrganisationAsync(
+        this Result<DataForRequest, ValidationException> handlerResult) => await Matcher(handlerResult, async handler =>
     {
         var splitOrganisation = ValidateModelAndInput(handler.PostFromBotModel.Organisation, 1);
         return await splitOrganisation.Match(async splitValidOrganisation =>
@@ -201,8 +201,8 @@ public static class ResultPostModelExtensions
             });
     });
 
-    public static async Task<Result<Handler, ValidationException>> HandleOrganisationAccountAsync(
-        this Result<Handler, ValidationException> handlerResult) => await Matcher(handlerResult, async handler =>
+    public static async Task<Result<DataForRequest, ValidationException>> HandleOrganisationAccountAsync(
+        this Result<DataForRequest, ValidationException> handlerResult) => await Matcher(handlerResult, async handler =>
     {
         var splitBankAccount = ValidateModelAndInput(handler.PostFromBotModel.OrganisationAccount, 2);
         return await splitBankAccount.Match(async splitBankAccountArray =>
@@ -222,8 +222,8 @@ public static class ResultPostModelExtensions
             });
     });
 
-    public static async Task<Result<Handler, ValidationException>> HandleContractAsync(
-        this Result<Handler, ValidationException> handlerResult) => await Matcher(handlerResult, async handler =>
+    public static async Task<Result<DataForRequest, ValidationException>> HandleContractAsync(
+        this Result<DataForRequest, ValidationException> handlerResult) => await Matcher(handlerResult, async handler =>
     {
         var splitContract = ValidateModelAndInput(handler.PostFromBotModel.Contract, 4);
         return await splitContract.Match(async splitContractArray =>
@@ -249,8 +249,8 @@ public static class ResultPostModelExtensions
         });
     });
 
-    public static async Task<Result<Handler, ValidationException>> HandleVatRateAsync(
-        this Result<Handler, ValidationException> handlerResult) => await Matcher(handlerResult, async handler =>
+    public static async Task<Result<DataForRequest, ValidationException>> HandleVatRateAsync(
+        this Result<DataForRequest, ValidationException> handlerResult) => await Matcher(handlerResult, async handler =>
     {
         var splitVatRate = ValidateModelAndInput(handler.PostFromBotModel.VatRate, 2);
         return await splitVatRate.Match(async splitVatRateArray =>
@@ -271,8 +271,8 @@ public static class ResultPostModelExtensions
             });
     });
 
-    public static async Task<Result<Handler, ValidationException>> HandleTaxTypeAsync(
-        this Result<Handler, ValidationException> handlerResult) => await Matcher(handlerResult, async handler =>
+    public static async Task<Result<DataForRequest, ValidationException>> HandleTaxTypeAsync(
+        this Result<DataForRequest, ValidationException> handlerResult) => await Matcher(handlerResult, async handler =>
     {
         var splitTaxType = ValidateModelAndInput(handler.PostFromBotModel.TypeOfTax, 2);
         return await splitTaxType.Match(async splitTaxTypeArray =>
@@ -292,8 +292,8 @@ public static class ResultPostModelExtensions
             });
     });
 
-    public static async Task<Result<Handler, ValidationException>> HandleAmountType(
-        this Result<Handler, ValidationException> handlerResult) => await Matcher(handlerResult, async handler => await Task.Run(() =>
+    public static async Task<Result<DataForRequest, ValidationException>> HandleAmountType(
+        this Result<DataForRequest, ValidationException> handlerResult) => await Matcher(handlerResult, async handler => await Task.Run(() =>
     {
         if (!StaticStructures.AmountTypes.Contains(handler.PostFromBotModel.AmountType!))
         {
@@ -309,8 +309,8 @@ public static class ResultPostModelExtensions
         return handlerResult;
     }));
     
-    public static async Task<Result<Handler, ValidationException>> HandlePaymentDeadline(
-        this Result<Handler, ValidationException> handlerResult) => await Matcher(handlerResult, async handler => await Task.Run(() =>
+    public static async Task<Result<DataForRequest, ValidationException>> HandlePaymentDeadline(
+        this Result<DataForRequest, ValidationException> handlerResult) => await Matcher(handlerResult, async handler => await Task.Run(() =>
     {
         if (!DateTime.TryParse(handler.PostFromBotModel.PaymentDeadline, new CultureInfo("de-DE"), out var date))
         {
@@ -328,9 +328,9 @@ public static class ResultPostModelExtensions
             : splitEntity;
     }
     
-    private static async Task<Result<Handler, ValidationException>> Matcher(
-        Result<Handler, ValidationException> handlerResult, Func<Handler, Task<Result<Handler, ValidationException>>> success) =>
-        await handlerResult.Match<Task<Result<Handler, ValidationException>>>(
+    private static async Task<Result<DataForRequest, ValidationException>> Matcher(
+        Result<DataForRequest, ValidationException> handlerResult, Func<DataForRequest, Task<Result<DataForRequest, ValidationException>>> success) =>
+        await handlerResult.Match<Task<Result<DataForRequest, ValidationException>>>(
              success, 
              failure =>
              {

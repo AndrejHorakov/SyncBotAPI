@@ -5,15 +5,15 @@ namespace SyncTelegramBot.Services;
 
 public class GetRequestHandler
 {
-    public async Task<AnswerFromApi> GetList(Handler handler, string? keyEntity, string? addOptions)
+    public async Task<AnswerFromApi> GetList(DataForRequest dataForRequest, string? keyEntity, string? addOptions)
     {
-        var filter = await ParseOptionsToRequestString(addOptions!, handler);
+        var filter = await ParseOptionsToRequestString(addOptions!, dataForRequest);
         if (keyEntity!.Contains("?$filter="))
             filter = filter.Substring(9, filter.Length-9);
-        return await GetAnswerAsString(handler, keyEntity, filter);
+        return await GetAnswerAsString(dataForRequest, keyEntity, filter);
     }
 
-    private async Task<AnswerFromApi> GetAnswerAsString(Handler handler, string? keyEntity, string? filter)
+    private async Task<AnswerFromApi> GetAnswerAsString(DataForRequest dataForRequest, string? keyEntity, string? filter)
     {
         if (string.IsNullOrEmpty(keyEntity))
             return new()
@@ -37,7 +37,7 @@ public class GetRequestHandler
                         Answer = $"На данный момент для отображения этого списка неизвестны уникальные параметры одной из сущностей ({entity})"
                     };
                 }
-                builder.Append(await GetListAsStringAsync(handler, filter!, entity));
+                builder.Append(await GetListAsStringAsync(dataForRequest, filter!, entity));
             }
         }
         catch
@@ -51,7 +51,7 @@ public class GetRequestHandler
         return new (){ Answer = builder.ToString() };
     }
 
-    private static async Task<string> ParseOptionsToRequestString(string? addOptions, Handler handler)
+    private static async Task<string> ParseOptionsToRequestString(string? addOptions, DataForRequest dataForRequest)
     {
         var builder = new StringBuilder();
 
@@ -70,7 +70,7 @@ public class GetRequestHandler
             var endPropertyValue = propertyValue;
             if (StaticStructures.HandleOptionKey.TryGetValue(propertyName, out var func))
             {
-                var handlingResult = await func(handler, propertyValue);
+                var handlingResult = await func(dataForRequest, propertyValue);
                 if (handlingResult.IsError)
                     return null!;
                 endPropertyValue = handlingResult.Value;
@@ -84,9 +84,9 @@ public class GetRequestHandler
         return builder.ToString();
     }
 
-    private static async Task<string?> GetListAsStringAsync(Handler handler, string filter, string entity)
+    private static async Task<string?> GetListAsStringAsync(DataForRequest dataForRequest, string filter, string entity)
     {
-        var ans = await handler.UnfClient.GetFromUnf(entity + filter);
+        var ans = await dataForRequest.UnfClient.GetFromUnf(entity + filter);
         var entityType = StaticStructures.Types[entity];
         var output = await ans.Content.ReadFromJsonAsync(entityType);
         return output?.ToString();

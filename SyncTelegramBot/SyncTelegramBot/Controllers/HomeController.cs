@@ -52,6 +52,6 @@ public class HomeController : Controller
         return Json(await PostRequestsService.SaveMove(InitializeHandler(postModel)));
     }
 
-    private Handler InitializeHandler(PostFromBotModel postFromBotModel) =>
+    private DataForRequest InitializeHandler(PostFromBotModel postFromBotModel) =>
         new(_unfClient, postFromBotModel, new (), _requestValues.DefaultMultiplicity, _requestValues.DefaultExchangeRate);
 }
