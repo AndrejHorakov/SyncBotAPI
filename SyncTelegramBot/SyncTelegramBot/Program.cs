@@ -31,6 +31,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.Use(async (ctx, next) =>
+{
+    if (ctx.Request.Headers.TryGetValue("SecretKey", out var secretKey) && secretKey == app.Configuration["RequestStrings:SecretKey"])
+        await next();
+});
+
 app.UseAuthorization();
 
 app.MapControllers();
