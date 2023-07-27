@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text.Encodings.Web;
 using SyncTelegramBot.Models.HelpModels;
 using SyncTelegramBot.Services;
@@ -8,6 +9,12 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddScoped<IUnfClient, UnfClient>();
 builder.Services.AddScoped<GetRequestHandler>();
+builder.Services.AddHttpClient<IUnfClient, UnfClient>((client) =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["RequestStrings:BaseUri"] ?? string.Empty);
+    client.DefaultRequestHeaders.Add("Authorization", builder.Configuration["RequestStrings:Authorization"] ?? string.Empty);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -35,6 +42,8 @@ app.Use(async (ctx, next) =>
 {
     if (ctx.Request.Headers.TryGetValue("SecretKey", out var secretKey) && secretKey == app.Configuration["RequestStrings:SecretKey"])
         await next();
+    ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+    await ctx.Response.WriteAsync("Access is denied!");
 });
 
 app.UseAuthorization();
