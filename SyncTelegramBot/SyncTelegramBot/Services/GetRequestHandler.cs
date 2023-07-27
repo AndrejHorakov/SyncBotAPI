@@ -87,8 +87,13 @@ public class GetRequestHandler
     private static async Task<string?> GetListAsStringAsync(DataForRequest dataForRequest, string filter, string entity)
     {
         var ans = await dataForRequest.UnfClient.GetFromUnf(entity + filter);
-        var entityType = StaticStructures.Types[entity];
-        var output = await ans.Content.ReadFromJsonAsync(entityType);
-        return output?.ToString();
+        return await ans!.Match(async httpResponseMessage =>
+        {
+            var entityType = StaticStructures.Types[entity];
+            var output = await httpResponseMessage.Content.ReadFromJsonAsync(entityType);
+            return output?.ToString() ?? "Не удалось прочитать результат запроса";
+        },
+            failure => Task.FromResult(failure.Message));
+        
     }
 }
