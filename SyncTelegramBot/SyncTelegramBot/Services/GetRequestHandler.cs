@@ -48,7 +48,8 @@ public class GetRequestHandler
             };
         }
 
-        return new (){ Answer = builder.ToString() };
+        var result = builder.ToString();
+        return new (){ Answer = string.IsNullOrEmpty(result) ? "Список пуст, объекты не найдены, предлагаем вернуться к выбору команды" : result };
     }
 
     private static async Task<string> ParseOptionsToRequestString(string? addOptions, DataForRequest dataForRequest)

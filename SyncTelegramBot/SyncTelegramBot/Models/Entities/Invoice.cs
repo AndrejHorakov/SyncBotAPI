@@ -14,10 +14,10 @@ public class Invoice
     public int DocumentAmount { get; set; }
     
     [JsonPropertyName("Автор")]
-    public OnlyDescription Author { get; set; }
+    public DescriptionEntity Author { get; set; }
         
     public override string ToString()
     {
-        return $"{Number}*{OperationType}*{DocumentAmount}*{Author}*Накладная";
+        return $"{Number}#{OperationType}#{DocumentAmount}#{Author}#Накладная";
     }
 }

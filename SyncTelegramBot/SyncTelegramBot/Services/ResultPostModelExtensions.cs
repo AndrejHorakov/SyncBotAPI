@@ -64,13 +64,13 @@ public static class ResultPostModelExtensions
         await Matcher(handlerResult, async handler =>
         {
             var splitDocument = handler.PostFromBotModel.DocumentFromDecryptionOfPayment!.Split('*');
-                if (!StaticStructures.DocumentInfo.TryGetValue(splitDocument[^1], out var func))
+            if (!StaticStructures.DocumentInfo.TryGetValue(splitDocument[^1], out var func))
             {
                 handlerResult.ErrorWasOccured(new ValidationException("Название документа не найдено"));
                 return handlerResult;
             }
             
-            var result = await func(handler);
+            var result = await func(handler); // Checking for belonging to contragent
             return await result.Match( handlerProcessed =>
                 {
                     handlerResult.ChangeValue(handlerProcessed);
@@ -110,13 +110,13 @@ public static class ResultPostModelExtensions
 
 
     public static async Task<Result<DataForRequest, ValidationException>> HandleLoanAgreementAsync(
-        this Result<DataForRequest, ValidationException> handlerResult) => await Matcher(handlerResult, async handler =>
+        this Result<DataForRequest, ValidationException> handlerResult, string ownerParameter) => await Matcher(handlerResult, async handler =>
     {
         var splitLoan = ValidateModelAndInput(handler.PostFromBotModel.LoanAgreement, 3);
         return await splitLoan.Match(async splitLoanAgreement =>
         {
             handler.Model.LoanAgreement = await handler.UnfClient.GetGuidFirst(
-                $"Document_ДоговорКредитаИЗайма?$filter=Number eq '{splitLoanAgreement[0]}' and ВидДоговора eq '{splitLoanAgreement[1]}'");
+                $"Document_ДоговорКредитаИЗайма?$filter=Number eq '{splitLoanAgreement[0]}' and ВидДоговора eq '{splitLoanAgreement[1]}' and {ownerParameter}");
 
             if (handler.Model.LoanAgreement is null)
                 handlerResult.ErrorWasOccured(new ValidationException("Договор кредита/займа не найден"));
@@ -223,14 +223,14 @@ public static class ResultPostModelExtensions
     });
 
     public static async Task<Result<DataForRequest, ValidationException>> HandleContractAsync(
-        this Result<DataForRequest, ValidationException> handlerResult) => await Matcher(handlerResult, async handler =>
+        this Result<DataForRequest, ValidationException> handlerResult, string ownerParameter) => await Matcher(handlerResult, async handler =>
     {
         var splitContract = ValidateModelAndInput(handler.PostFromBotModel.Contract, 4);
         return await splitContract.Match(async splitContractArray =>
         {
             splitContractArray[3] = splitContractArray[3] == "Касса" ? "ИзКассы" : "СоСчета";
             handler.Model.Contract = await handler.UnfClient.GetGuidFirst(
-                $"Document_Расход{splitContractArray[3]}?$filter=Number eq '{splitContractArray[0]}' and СуммаДокумента eq {splitContractArray[2]}");
+                $"Document_Расход{splitContractArray[3]}?$filter=Number eq '{splitContractArray[0]}' and СуммаДокумента eq {splitContractArray[2]} and {ownerParameter}");
 
             if (handler.Model.Contract is null)
             {
@@ -322,9 +322,9 @@ public static class ResultPostModelExtensions
 
     private static Result<string[], ValidationException> ValidateModelAndInput(string? entity, int countSlices)
     {
-        var splitEntity = entity!.Split('*');
+        var splitEntity = entity!.Split('#');
         return splitEntity.Length != countSlices
-            ? new ValidationException("Неверное количество полей в сущности")
+            ? new ValidationException("Неверный формат записи")
             : splitEntity;
     }
     

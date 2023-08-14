@@ -11,7 +11,7 @@ public class Expense
     public int DocumentAmount { get; set; } 
     
     [JsonPropertyName("Подотчетник")]
-    public OnlyDescription Employee { get; set; }
+    public DescriptionEntity Employee { get; set; }
   
     [JsonPropertyName("НовыйМеханизмИнкассации")]
     public bool? Type { get; set; }
@@ -19,7 +19,7 @@ public class Expense
     public override string ToString()
     {
         return Type is not null 
-            ? $"{Number}*{Employee}*{DocumentAmount}*Касса"
-            : $"{Number}*{Employee}*{DocumentAmount}*Счет";
+            ? $"{Number}#{Employee}#{DocumentAmount}#Касса"
+            : $"{Number}#{Employee}#{DocumentAmount}#Счет";
     }
 }

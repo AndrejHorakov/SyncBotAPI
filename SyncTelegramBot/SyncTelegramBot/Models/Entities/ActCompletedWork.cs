@@ -12,6 +12,6 @@ public class ActCompletedWork
 
     public override string ToString()
     {
-        return $"{Number}*{IdPayment}*АктВыполненныхРабот";
+        return $"{Number}#{IdPayment}#АктВыполненныхРабот";
     }
 }

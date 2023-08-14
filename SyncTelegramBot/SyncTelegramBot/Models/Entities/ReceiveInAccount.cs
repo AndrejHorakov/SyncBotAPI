@@ -15,6 +15,6 @@ public class ReceiveInAccount
 
     public override string ToString()
     {
-        return $"{Number}*{Date}*{DocumentAmount}*ПоступлениеНаСчет";
+        return $"{Number}#{Date}#{DocumentAmount}#ПоступлениеНаСчет";
     }
 }

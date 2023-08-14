@@ -9,6 +9,6 @@ public class Correspondence : CodeAndDescription
     
     public override string ToString()
     {
-        return $"{Code}*{Description}*{AccountType}";
+        return $"{Code}#{Description}#{AccountType}";
     }
 }

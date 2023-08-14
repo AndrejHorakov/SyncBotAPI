@@ -12,6 +12,6 @@ public class CodeAndDescription
     
     public override string ToString()
     {
-        return $"{Code}*{Description}";
+        return $"{Code}#{Description}";
     }
 }

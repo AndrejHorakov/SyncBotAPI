@@ -17,6 +17,6 @@ public class LoanAgreement
     public double? DocumentAmount { get; set; }
     public override string ToString()
     {
-        return $"{Number}*{ContractType}*{PaymentSize}/{DocumentAmount}";
+        return $"{Number}#{ContractType}#{PaymentSize}/{DocumentAmount}";
     }
 }

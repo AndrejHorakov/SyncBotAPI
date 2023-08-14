@@ -27,7 +27,7 @@ public static class StaticStructures
     };
 
     private static async Task<Result<DataForRequest, ValidationException>> HandleDecryptionAsync(int slices, DataForRequest dataForRequest,
-        string secondParameter, int numberSecondParameter, Func<string, string> formatter, string? typeInvoice = null)
+        string secondParameter, int indexSecondParameter, Func<string, string> formatter, string? typeInvoice = null)
     {
         var splitDecryption = dataForRequest.PostFromBotModel.DocumentFromDecryptionOfPayment?.Split('*');
         if (splitDecryption?.Length != slices)
@@ -35,7 +35,7 @@ public static class StaticStructures
         dataForRequest.Model.Decryption ??= new DecryptionPayment[] { new() { LineNumber = "1" } };
         dataForRequest.Model.Decryption[0].DocumentType = $"StandardODATA.Document_{typeInvoice+splitDecryption[^1]}";
         dataForRequest.Model.Decryption[0].Document = await dataForRequest.UnfClient.GetGuidFirst(
-            $"Document_{typeInvoice+splitDecryption[^1]}?$filter=Number eq '{splitDecryption[0]}' and {secondParameter} eq {formatter(splitDecryption[numberSecondParameter])}");
+            $"Document_{typeInvoice+splitDecryption[^1]}?$filter=Number eq '{splitDecryption[0]}' and {secondParameter} eq {formatter(splitDecryption[indexSecondParameter])} and Контрагент_Key eq guid'{dataForRequest.Model.Contragent}'");
 
         if (dataForRequest.Model.Decryption[0].Document is null)
             return new ValidationException("Документ не найден");
@@ -54,8 +54,8 @@ public static class StaticStructures
         ["Catalog_СтавкиНДС"] = typeof(AnswerFromUnf<VatRate>),
         ["Document_РасходСоСчета"] = typeof(AnswerFromUnf<Expense>),
         ["Document_РасходИзКассы"] = typeof(AnswerFromUnf<Expense>),
-        ["Catalog_Сотрудники"] = typeof(AnswerFromUnf<OnlyDescription>),
-        ["Catalog_Организации"] = typeof(AnswerFromUnf<OnlyDescription>),
+        ["Catalog_Сотрудники"] = typeof(AnswerFromUnf<DescriptionEntity>),
+        ["Catalog_Организации"] = typeof(AnswerFromUnf<DescriptionEntity>),
         ["Document_ЗаказПокупателя"] = typeof(AnswerFromUnf<BuyerOrder>),
         ["Document_ПриходнаяНакладная"] = typeof(AnswerFromUnf<Invoice>),
         ["Document_РасходнаяНакладная"] = typeof(AnswerFromUnf<Invoice>),
@@ -121,7 +121,7 @@ public static class StaticStructures
             ["РасчетыПоКредитам"] = async handlerResult =>
             {
                 await handlerResult.HandleContragentAsync();
-                await handlerResult.HandleLoanAgreementAsync();
+                await handlerResult.HandleLoanAgreementAsync($"Контрагент_Key eq guid'{handlerResult.Value?.Model.Contragent}'");
 
                 return await handlerResult.Match(async handler =>
                 {
@@ -137,8 +137,8 @@ public static class StaticStructures
             },
             ["ВозвратЗаймаСотрудником"] = async handlerResult =>
             {
-                await handlerResult.HandleLoanAgreementAsync();
                 await handlerResult.HandleEmployeeAsync();
+                await handlerResult.HandleLoanAgreementAsync($"Сотрудник_Key eq guid'{handlerResult.Value?.Model.Employee}'");
                 await handlerResult.HandleAmountType();
                 return handlerResult;
             },
@@ -169,7 +169,7 @@ public static class StaticStructures
             ["ОтПодотчетника"] = async handlerResult =>
             {
                 await handlerResult.HandleEmployeeAsync();
-                await handlerResult.HandleContractAsync();
+                await handlerResult.HandleContractAsync($"Сотрудник_Key eq guid'{handlerResult.Value?.Model.Employee}'");
                 return handlerResult;
             },
             ["ЛичныеСредстваПредпринимателя"] = async handlerResult =>
@@ -215,7 +215,7 @@ public static class StaticStructures
             ["ВыдачаЗаймаСотруднику"] = async handlerResult =>
             {
                 await handlerResult.HandleEmployeeAsync();
-                await handlerResult.HandleLoanAgreementAsync();
+                await handlerResult.HandleLoanAgreementAsync($"Сотрудник_Key eq guid'{handlerResult.Value?.Model.Employee}'");
                 return handlerResult;
             },
             ["ВзносНаличнымиВБанк"] = async handlerResult =>

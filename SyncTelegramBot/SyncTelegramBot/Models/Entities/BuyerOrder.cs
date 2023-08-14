@@ -12,6 +12,6 @@ public class BuyerOrder
     
     public override string ToString()
     {
-        return $"{Number}*{OperationType}*ЗаказПокупателя";
+        return $"{Number}#{OperationType}*ЗаказПокупателя";
     }
 }

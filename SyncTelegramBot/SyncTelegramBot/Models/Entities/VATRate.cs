@@ -12,6 +12,6 @@ public class VatRate
 
     public override string ToString()
     {
-        return $"{VATRate}*{Description}";
+        return $"{VATRate}#{Description}";
     }
 }

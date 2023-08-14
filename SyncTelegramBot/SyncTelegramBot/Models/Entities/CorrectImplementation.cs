@@ -12,6 +12,6 @@ public class CorrectImplementation
 
     public override string ToString()
     {
-        return $"{Number}*{OperationType}*Корректировка";
+        return $"{Number}#{OperationType}#Корректировка";
     }
 }
