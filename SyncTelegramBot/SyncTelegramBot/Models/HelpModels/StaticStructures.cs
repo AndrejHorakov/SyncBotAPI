@@ -6,41 +6,41 @@ namespace SyncTelegramBot.Models.HelpModels;
 
 public static class StaticStructures
 {
-    public static readonly Dictionary<string, Func<DataForRequest, Task<Result<DataForRequest, ValidationException>>>> DocumentInfo = new()
-    {
-        ["Накладная"] =  handler =>  handler.PostFromBotModel.Type switch
-            {
-                PostType.Expense => HandleDecryptionAsync(
-                    5, handler,"СуммаДокумента",  2, str=> str,  "Расходная"),
-                _ => HandleDecryptionAsync(
-                    5, handler, "СуммаДокумента",2, str=> str, "Приходная")
-            },
-        ["ЗаказПокупателя"] = async handler =>
-            await HandleDecryptionAsync(3, handler, "ВидОперации", 1, str => $"'{str}'"),
-        ["ПоступлениеНаСчет"] =
-            async handler => await HandleDecryptionAsync(4, handler, "СуммаДокумента", 2, str => str),
-        ["АктВыполненныхРабот"] = async handler =>
-            await HandleDecryptionAsync(3, handler, "ИдентификаторПлатежа", 1, str => $"'{str}'"),
-        ["КорректировкаРеализации"] = async handler =>
-            await HandleDecryptionAsync(3, handler, "ВидОперации", 1, str => $"'{str}'"),
-    };
+    // public static readonly Dictionary<string, Func<DataForRequest, Task<Result<DataForRequest, ValidationException>>>> DocumentInfo = new()
+    // {
+    //     ["Накладная"] =  handler =>  handler.PostFromBotModel.Type switch
+    //         {
+    //             PostType.Expense => HandleDecryptionAsync(
+    //                 5, handler,"СуммаДокумента",  2, str=> str,  "Расходная"),
+    //             _ => HandleDecryptionAsync(
+    //                 5, handler, "СуммаДокумента",2, str=> str, "Приходная")
+    //         },
+    //     ["ЗаказПокупателя"] = async handler =>
+    //         await HandleDecryptionAsync(3, handler, "ВидОперации", 1, str => $"'{str}'"),
+    //     ["ПоступлениеНаСчет"] =
+    //         async handler => await HandleDecryptionAsync(4, handler, "СуммаДокумента", 2, str => str),
+    //     ["АктВыполненныхРабот"] = async handler =>
+    //         await HandleDecryptionAsync(3, handler, "ИдентификаторПлатежа", 1, str => $"'{str}'"),
+    //     ["КорректировкаРеализации"] = async handler =>
+    //         await HandleDecryptionAsync(3, handler, "ВидОперации", 1, str => $"'{str}'"),
+    // };
 
-    private static async Task<Result<DataForRequest, ValidationException>> HandleDecryptionAsync(int slices, DataForRequest dataForRequest,
-        string secondParameter, int indexSecondParameter, Func<string, string> formatter, string? typeInvoice = null)
-    {
-        var splitDecryption = dataForRequest.PostFromBotModel.DocumentFromDecryptionOfPayment?.Split('*');
-        if (splitDecryption?.Length != slices)
-            return new ValidationException("Неверно введен документ");
-        dataForRequest.Model.Decryption ??= new DecryptionPayment[] { new() { LineNumber = "1" } };
-        dataForRequest.Model.Decryption[0].DocumentType = $"StandardODATA.Document_{typeInvoice+splitDecryption[^1]}";
-        dataForRequest.Model.Decryption[0].Document = await dataForRequest.UnfClient.GetGuidFirst(
-            $"Document_{typeInvoice+splitDecryption[^1]}?$filter=Number eq '{splitDecryption[0]}' and {secondParameter} eq {formatter(splitDecryption[indexSecondParameter])} and Контрагент_Key eq guid'{dataForRequest.Model.Contragent}'");
-
-        if (dataForRequest.Model.Decryption[0].Document is null)
-            return new ValidationException("Документ не найден");
-        //СуммаДокумента
-        return dataForRequest;
-    }
+    // private static async Task<Result<DataForRequest, ValidationException>> HandleDecryptionAsync(int slices, DataForRequest dataForRequest,
+    //     string secondParameter, int indexSecondParameter, Func<string, string> formatter, string? typeInvoice = null)
+    // {
+    //     var splitDecryption = dataForRequest.PostFromBotModel.DocumentFromDecryptionOfPayment?.Split('*');
+    //     if (splitDecryption?.Length != slices)
+    //         return new ValidationException("Неверно введен документ");
+    //     dataForRequest.Model.Decryption ??= new DecryptionPayment[] { new() { LineNumber = "1" } };
+    //     dataForRequest.Model.Decryption[0].DocumentType = $"StandardODATA.Document_{typeInvoice+splitDecryption[^1]}";
+    //     dataForRequest.Model.Decryption[0].Document = await dataForRequest.UnfClient.GetGuidFirst(
+    //         $"Document_{typeInvoice+splitDecryption[^1]}?$filter=Number eq '{splitDecryption[0]}' and {secondParameter} eq {formatter(splitDecryption[indexSecondParameter])} and Контрагент_Key eq guid'{dataForRequest.Model.Contragent}'");
+    //
+    //     if (dataForRequest.Model.Decryption[0].Document is null)
+    //         return new ValidationException("Документ не найден");
+    //     //СуммаДокумента
+    //     return dataForRequest;
+    // }
     
     public static readonly HashSet<string> AmountTypes = new()
     {
@@ -53,11 +53,12 @@ public static class StaticStructures
         ["Catalog_СтавкиНДС"] = typeof(AnswerFromUnf<VatRate>),
         ["Document_РасходСоСчета"] = typeof(AnswerFromUnf<Expense>),
         ["Document_РасходИзКассы"] = typeof(AnswerFromUnf<Expense>),
-        ["Catalog_Сотрудники"] = typeof(AnswerFromUnf<DescriptionEntity>),
-        ["Catalog_Организации"] = typeof(AnswerFromUnf<DescriptionEntity>),
         ["Document_ЗаказПокупателя"] = typeof(AnswerFromUnf<BuyerOrder>),
         ["Document_ПриходнаяНакладная"] = typeof(AnswerFromUnf<Invoice>),
         ["Document_РасходнаяНакладная"] = typeof(AnswerFromUnf<Invoice>),
+        ["Catalog_Сотрудники"] = typeof(AnswerFromUnf<DescriptionEntity>),
+        ["Document_АвансовыйОтчет"] = typeof(AnswerFromUnf<AdvanceReport>),
+        ["Catalog_Организации"] = typeof(AnswerFromUnf<DescriptionEntity>),
         ["Catalog_ВидыНалогов"] = typeof(AnswerFromUnf<CodeAndDescription>),
         ["Catalog_Контрагенты"] = typeof(AnswerFromUnf<CodeAndDescription>),
         ["Catalog_БанковскиеСчета"] = typeof(AnswerFromUnf<CodeAndDescription>),
@@ -86,6 +87,11 @@ public static class StaticStructures
         ["Catalog_ДоговорыКонтрагентов"] = new(){"Catalog_ДоговорыКонтрагентов"},
         ["Document_ДоговорКредитаИЗайма"] = new(){"Document_ДоговорКредитаИЗайма"},
         ["ChartOfAccounts_Управленческий"] = new(){"ChartOfAccounts_Управленческий"},
+        ["Document_Поставщику"] = new ()
+        {
+            "Document_АвансовыйОтчет",
+            "Document_ПриходнаяНакладная"
+        },
         ["Document_Расход"] = new()
         {
             "Document_РасходИзКассы",

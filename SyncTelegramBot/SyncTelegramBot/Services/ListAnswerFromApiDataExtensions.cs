@@ -25,6 +25,9 @@ public static class ListAnswerFromApiDataExtensions
         EasyToListAnswerFromApiData<ReceiveInAccount> list, string document = "") => list.ToListAnswerFromApiData("_ПоступлениеНаСчет");
 
     public static List<AnswerFromApiData> ToListAnswerFromApiData(
+        EasyToListAnswerFromApiData<AdvanceReport> list, string document = "") => list.ToListAnswerFromApiData("_АвансовыйОтчет");
+    
+    public static List<AnswerFromApiData> ToListAnswerFromApiData(
         EasyToListAnswerFromApiData<Expense> list, string document = "") => list is null 
         ? null 
         : list.Count == 0 

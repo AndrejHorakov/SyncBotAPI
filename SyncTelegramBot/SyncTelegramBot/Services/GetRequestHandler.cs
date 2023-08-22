@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text;
-using SyncTelegramBot.Models.Entities;
 using SyncTelegramBot.Models.HelpModels;
 
 namespace SyncTelegramBot.Services;
@@ -41,7 +40,7 @@ public class GetRequestHandler
                 }
 
                 var readResult = await GetAnswerFromUnfAsync(dataForRequest, filter!, entity);
-                if (readResult!.IsError)
+                if (readResult!.Value?.Data is null)
                     return readResult.Value!;
                 data = data.Concat(readResult.Value!.Data).ToList();
             }
@@ -98,13 +97,39 @@ public class GetRequestHandler
         return await ans!.Match<Task<Result<AnswerFromApi, ValidationException>?>>(async httpResponseMessage =>
         {
             var entityType = StaticStructures.Types[entity];
-            var content = await httpResponseMessage.Content.ReadFromJsonAsync(entityType);
+            object? content;
+            try
+            {
+                content = await httpResponseMessage.Content.ReadFromJsonAsync(entityType);
+            }
+            catch
+            {
+                return await Task.FromResult<Result<AnswerFromApi, ValidationException>>(new AnswerFromApi("Не удалось прочитать результат запроса"));
+            }
             var output = content as dynamic;
-            if (output is null)
-                return await Task.FromResult<Result<AnswerFromApi, ValidationException>>(
-                    new AnswerFromApi("Не удалось прочитать результат запроса"));
-            return await Task.FromResult<Result<AnswerFromApi, ValidationException>>(new AnswerFromApi(ListAnswerFromApiDataExtensions.ToListAnswerFromApiData(output.Value)));
+            
+            return await Task.FromResult<Result<AnswerFromApi, ValidationException>>(new AnswerFromApi(ListAnswerFromApiDataExtensions.ToListAnswerFromApiData(output!.Value)));
         },
-            failure => Task.FromResult<Result<AnswerFromApi, ValidationException>?>(new AnswerFromApi(failure.Message)));
+            async _ =>
+            {
+                var answerWithoutFilter = await dataForRequest.UnfClient.GetFromUnf(entity);
+                return await answerWithoutFilter!.Match<Task<Result<AnswerFromApi, ValidationException>?>>(async httpResponseMessage =>
+                {
+                    var entityType = StaticStructures.Types[entity];
+                    object? content;
+                    try
+                    {
+                        content = await httpResponseMessage.Content.ReadFromJsonAsync(entityType);
+                    }
+                    catch
+                    {
+                        return await Task.FromResult<Result<AnswerFromApi, ValidationException>>(
+                            new AnswerFromApi("Не удалось прочитать результат запроса"));
+                    }
+                    var output = content as dynamic;
+
+                    return await Task.FromResult<Result<AnswerFromApi, ValidationException>>(new AnswerFromApi(ListAnswerFromApiDataExtensions.ToListAnswerFromApiData(output!.Value)));
+                },failure => Task.FromResult<Result<AnswerFromApi, ValidationException>?>(new AnswerFromApi(failure.Message)));
+            });
     }
 }
