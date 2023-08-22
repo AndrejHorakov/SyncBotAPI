@@ -30,7 +30,7 @@ public class HomeController : Controller
 
     [HttpPost]
     [Route("Income")]
-    public async Task<JsonResult> SaveReceipt([FromBody] PostFromBotModel postModel)
+    public async Task<JsonResult> SaveReceipt([FromForm] PostFromBotModel postModel)
     {
         postModel.Type = PostType.Receive;
         return Json(await PostRequestsService.SaveReceipt(InitializeHandler(postModel)));
@@ -38,7 +38,7 @@ public class HomeController : Controller
     
     [HttpPost]
     [Route("Expense")]
-    public async Task<JsonResult> SaveExpense([FromBody] PostFromBotModel postModel)
+    public async Task<JsonResult> SaveExpense([FromForm] PostFromBotModel postModel)
     {
         postModel.Type = PostType.Expense;
         return Json(await PostRequestsService.SaveExpense(InitializeHandler(postModel)));
@@ -46,7 +46,7 @@ public class HomeController : Controller
     
     [HttpPost]
     [Route("Move")]
-    public async Task<JsonResult> SaveMove([FromBody] PostFromBotModel postModel)
+    public async Task<JsonResult> SaveMove([FromForm] PostFromBotModel postModel)
     {
         postModel.Type = PostType.Move;
         return Json(await PostRequestsService.SaveMove(InitializeHandler(postModel)));
