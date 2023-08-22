@@ -1,4 +1,6 @@
+using System.ComponentModel.DataAnnotations;
 using System.Text;
+using SyncTelegramBot.Models.Entities;
 using SyncTelegramBot.Models.HelpModels;
 
 namespace SyncTelegramBot.Services;
@@ -7,13 +9,13 @@ public class GetRequestHandler
 {
     public async Task<AnswerFromApi> GetList(DataForRequest dataForRequest, string? keyEntity, string? addOptions)
     {
-        var filter = await ParseOptionsToRequestString(addOptions!, dataForRequest);
+        var filter = await ParseOptionsToRequestString(addOptions!);//, dataForRequest);
         if (keyEntity!.Contains("?$filter="))
             filter = filter.Substring(9, filter.Length-9);
-        return await GetAnswerAsString(dataForRequest, keyEntity, filter);
+        return await GetAnswerFromApi(dataForRequest, keyEntity, filter);
     }
 
-    private async Task<AnswerFromApi> GetAnswerAsString(DataForRequest dataForRequest, string? keyEntity, string? filter)
+    private async Task<AnswerFromApi> GetAnswerFromApi(DataForRequest dataForRequest, string? keyEntity, string? filter)
     {
         if (string.IsNullOrEmpty(keyEntity))
             return new()
@@ -25,7 +27,7 @@ public class GetRequestHandler
             {
                 Answer = "На данный момент для отображения этого списка неизвестны его сущности"
             };
-        var builder = new StringBuilder();
+        var data = new List<AnswerFromApiData>();
         try
         {
             foreach (var entity in StaticStructures.ListEntities[keyEntity])
@@ -37,7 +39,11 @@ public class GetRequestHandler
                         Answer = $"На данный момент для отображения этого списка неизвестны уникальные параметры одной из сущностей ({entity})"
                     };
                 }
-                builder.Append(await GetListAsStringAsync(dataForRequest, filter!, entity));
+
+                var readResult = await GetAnswerFromUnfAsync(dataForRequest, filter!, entity);
+                if (readResult!.IsError)
+                    return readResult.Value!;
+                data = data.Concat(readResult.Value!.Data).ToList();
             }
         }
         catch
@@ -48,14 +54,16 @@ public class GetRequestHandler
             };
         }
 
-        return new (){ Answer = builder.ToString() };
+        if (data.Count == 0)
+            return "Список пуст: объекты не найдены, предлагаем вернуться к выбору команды";
+        return data;
     }
 
-    private static async Task<string> ParseOptionsToRequestString(string? addOptions, DataForRequest dataForRequest)
+    private static Task<string> ParseOptionsToRequestString(string? addOptions)//, DataForRequest dataForRequest)
     {
         var builder = new StringBuilder();
 
-        if (string.IsNullOrEmpty(addOptions)) return builder.ToString();
+        if (string.IsNullOrEmpty(addOptions)) return Task.FromResult(builder.ToString());
         
         var keyValueTuples = addOptions
             .Split(';')
@@ -67,28 +75,36 @@ public class GetRequestHandler
         builder.Append("?$filter=");
         foreach (var (propertyName, propertyValue) in keyValueTuples)
         {
-            var endPropertyValue = propertyValue;
-            if (StaticStructures.HandleOptionKey.TryGetValue(propertyName, out var func))
-            {
-                var handlingResult = await func(dataForRequest, propertyValue);
-                if (handlingResult.IsError)
-                    return null!;
-                endPropertyValue = handlingResult.Value;
-            }
+            // var endPropertyValue = propertyValue;
+            // if (StaticStructures.HandleOptionKey.TryGetValue(propertyName, out var func))
+            // {
+            //     var handlingResult = await func(dataForRequest, propertyValue);
+            //     if (handlingResult.IsError)
+            //         return null!;
+            //     endPropertyValue = handlingResult.Value;
+            // }
                     
             if (!string.IsNullOrEmpty(propertyValue))
-                builder.Append($"{propertyName} eq {endPropertyValue} and ");
+                builder.Append($"{propertyName} eq {propertyValue} and ");
         }
-        builder.Remove(builder.Length - 5, 5);
+        builder.Remove(builder.Length - 5, 5); //Delete last "and"
 
-        return builder.ToString();
+        return Task.FromResult(builder.ToString());
     }
 
-    private static async Task<string?> GetListAsStringAsync(DataForRequest dataForRequest, string filter, string entity)
+    private static async Task<Result<AnswerFromApi, ValidationException>?> GetAnswerFromUnfAsync(DataForRequest dataForRequest, string filter, string entity)
     {
         var ans = await dataForRequest.UnfClient.GetFromUnf(entity + filter);
-        var entityType = StaticStructures.Types[entity];
-        var output = await ans.Content.ReadFromJsonAsync(entityType);
-        return output?.ToString();
+        return await ans!.Match<Task<Result<AnswerFromApi, ValidationException>?>>(async httpResponseMessage =>
+        {
+            var entityType = StaticStructures.Types[entity];
+            var content = await httpResponseMessage.Content.ReadFromJsonAsync(entityType);
+            var output = content as dynamic;
+            if (output is null)
+                return await Task.FromResult<Result<AnswerFromApi, ValidationException>>(
+                    new AnswerFromApi("Не удалось прочитать результат запроса"));
+            return await Task.FromResult<Result<AnswerFromApi, ValidationException>>(new AnswerFromApi(ListAnswerFromApiDataExtensions.ToListAnswerFromApiData(output.Value)));
+        },
+            failure => Task.FromResult<Result<AnswerFromApi, ValidationException>?>(new AnswerFromApi(failure.Message)));
     }
 }

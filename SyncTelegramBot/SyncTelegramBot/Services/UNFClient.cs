@@ -1,7 +1,8 @@
+using System.Net;
 using Microsoft.Extensions.Options;
 using SyncTelegramBot.Models.HelpModels;
-using System.Net;
 using SyncTelegramBot.Models.Entities;
+using SyncTelegramBot.Models.Exceptions;
 using SyncTelegramBot.Models.PostToUNFModels;
 using SyncTelegramBot.Services.Abstractions;
 
@@ -13,19 +14,23 @@ public class UnfClient : IUnfClient
     private readonly Uri _baseUri;
     private readonly string _topOneFilter;
 
-    public UnfClient(IOptions<RequestValues> requestStrings)
+    public UnfClient(IOptions<RequestValues> requestStrings, HttpClient client)
     {
         _topOneFilter = "&$top=1";
         var requestValues = requestStrings.Value;
         _baseUri = new (requestValues.BaseUri);
-        _httpClient = new HttpClient{BaseAddress = _baseUri};
-        _httpClient.DefaultRequestHeaders.Add("Authorization", requestValues.Authorization);
-        _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+        _httpClient = client;
     }
 
-    public async Task<HttpResponseMessage> GetFromUnf(string filter)
+    public async Task<Result<HttpResponseMessage, ValidationException>?> GetFromUnf(string filter)
     {
-        return await _httpClient.GetAsync(_baseUri + filter);
+        var result = await _httpClient.GetAsync(_baseUri + filter);
+        return (int)result.StatusCode switch
+        {
+            < 500 and >= 400 => new ValidationException("Ошибка на стороне клиента при запросе"),
+            >= 500 => new ValidationException("Внутренняя ошибка сервера"),
+            _ => result
+        };
     }
 
     public async Task<string?> GetGuidFirst(string filter)
@@ -37,34 +42,25 @@ public class UnfClient : IUnfClient
         return ans.Value[0].Guid;
     }
 
-    public async Task<HttpResponseMessage?> PostReceipt(PostToUnfModel? model)
+    public async Task<Result<HttpResponseMessage, ValidationException>?> PostReceipt(PostToUnfModel? model) =>
+        await ProcessPostRequest("Document_ПоступлениеВКассу", model);
+
+    public async Task<Result<HttpResponseMessage, ValidationException>?> PostExpense(PostToUnfModel? model) =>
+        await ProcessPostRequest("Document_РасходИзКассы", model);
+
+    public async Task<Result<HttpResponseMessage, ValidationException>?> PostMove(PostToUnfModel? model) => 
+        await ProcessPostRequest(model?.OperationType == "МеждуКассами" ? "Document_ПеремещениеДС" : "Document_РасходСоСчета", model);
+
+    private async Task<Result<HttpResponseMessage, ValidationException>> ProcessPostRequest(string requestEntity, PostToUnfModel? model)
     {
-        var ans =  await _httpClient.PostAsJsonAsync("Document_ПоступлениеВКассу?$format=json", model);
+        var ans =  await _httpClient.PostAsJsonAsync(requestEntity, model);
         if (ans.StatusCode != HttpStatusCode.Created)
-            return ans;
+            return new ValidationException("При создании объекта произошла ошибка, проверьте введенные данные");
         var entity = await ans.Content.ReadFromJsonAsync<GuidEntity>();
         var guid = entity?.Guid;
-        return await _httpClient.GetAsync($"Document_ПоступлениеВКассу(guid'{guid}')/Post");
-    }
-    
-    public async Task<HttpResponseMessage?> PostExpense(PostToUnfModel? model)
-    {
-        var ans =  await _httpClient.PostAsJsonAsync("Document_РасходИзКассы?$format=json", model);
-        if (ans.StatusCode != HttpStatusCode.Created)
-            return ans;
-        var entity = await ans.Content.ReadFromJsonAsync<GuidEntity>();
-        var guid = entity?.Guid;
-        return await _httpClient.GetAsync($"Document_РасходИзКассы(guid'{guid}')/Post");
-    }
-    
-    public async Task<HttpResponseMessage?> PostMove(PostToUnfModel? model)
-    {
-        var entityString = model?.OperationType == "МеждуКассами" ? "Document_ПеремещениеДС" : "Document_РасходСоСчета";
-        var ans =  await _httpClient.PostAsJsonAsync(entityString, model);
-        if (ans.StatusCode != HttpStatusCode.Created)
-            return ans;
-        var entity = await ans.Content.ReadFromJsonAsync<GuidEntity>();
-        var guid = entity?.Guid;
-        return await _httpClient.GetAsync($"{entityString}(guid'{guid}')/Post");
+        var result = await _httpClient.GetAsync($"{requestEntity}(guid'{guid}')/Post");
+        if (result.StatusCode != HttpStatusCode.OK)
+            return new ValidationException("Операция сохранена, произошла ошибка при проведении операции, проверьте введенные данные");
+        return result;
     }
 }
