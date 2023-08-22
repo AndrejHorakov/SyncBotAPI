@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace SyncTelegramBot.Models.Entities;
 
-public class ActCompletedWork
+public class ActCompletedWork : GuidEntity
 {
     [JsonPropertyName("Number")]
     public string? Number { get; set; }
@@ -12,6 +12,6 @@ public class ActCompletedWork
 
     public override string ToString()
     {
-        return $"{Number}*{IdPayment}*АктВыполненныхРабот";
+        return $"{Number} {IdPayment}";
     }
 }
