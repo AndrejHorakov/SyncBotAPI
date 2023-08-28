@@ -1,11 +1,13 @@
+using SyncTelegramBot.Models.Entities;
+
 namespace SyncTelegramBot.Models.HelpModels;
 
-public class AnswerFromUnf<T>
+public class AnswerFromUnf<T> where T : GuidEntity
 {
-    public EasyToStringList<T> Value { get; set; } = null!;
+    public EasyToListAnswerFromApiData<T> Value { get; set; } = null!;
 
-    public override string ToString()
+    public List<AnswerFromApiData> ToListAnswerFromApiData()
     {
-        return Value.ToString();
+        return Value.ToListAnswerFromApiData();
     }
 }

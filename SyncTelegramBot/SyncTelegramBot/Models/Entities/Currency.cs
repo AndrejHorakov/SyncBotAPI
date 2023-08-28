@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace SyncTelegramBot.Models.Entities;
 
-public class Currency
+public class Currency : GuidEntity
 {
     [JsonPropertyName("Description")]
     public string Description { get; set; }
@@ -11,6 +11,6 @@ public class Currency
     public string Sign { get; set; }
     public override string ToString()
     {
-        return $"{Sign}*{Description}";
+        return $"{Sign} {Description}";
     }
 }

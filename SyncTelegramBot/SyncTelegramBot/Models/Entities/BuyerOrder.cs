@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace SyncTelegramBot.Models.Entities;
 
-public class BuyerOrder
+public class BuyerOrder : GuidEntity
 {
     [JsonPropertyName("Number")]
     public string? Number { get; set; }
@@ -12,6 +12,6 @@ public class BuyerOrder
     
     public override string ToString()
     {
-        return $"{Number}*{OperationType}*ЗаказПокупателя";
+        return $"{Number} {OperationType}";
     }
 }

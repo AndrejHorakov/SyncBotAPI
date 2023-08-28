@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace SyncTelegramBot.Models.Entities;
 
-public class CodeAndDescription
+public class CodeAndDescription : GuidEntity
 {
     [JsonPropertyName("Code")]
     public string Code { get; set; }
@@ -12,6 +12,6 @@ public class CodeAndDescription
     
     public override string ToString()
     {
-        return $"{Code}*{Description}";
+        return $"{Code} {Description}";
     }
 }

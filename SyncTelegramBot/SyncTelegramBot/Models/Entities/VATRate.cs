@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace SyncTelegramBot.Models.Entities;
 
-public class VatRate
+public class VatRate : GuidEntity
 {
     [JsonPropertyName("ВидСтавкиНДС")]
     public string VATRate { get; set; }
@@ -12,6 +12,6 @@ public class VatRate
 
     public override string ToString()
     {
-        return $"{VATRate}*{Description}";
+        return $"{VATRate} {Description}";
     }
 }

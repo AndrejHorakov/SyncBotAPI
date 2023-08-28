@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace SyncTelegramBot.Models.Entities;
 
-public class LoanAgreement
+public class LoanAgreement : GuidEntity
 {
     [JsonPropertyName("Number")]
     public string? Number { get; set; }
@@ -17,6 +17,6 @@ public class LoanAgreement
     public double? DocumentAmount { get; set; }
     public override string ToString()
     {
-        return $"{Number}*{ContractType}*{PaymentSize}/{DocumentAmount}";
+        return $"{Number} {ContractType} {PaymentSize}/{DocumentAmount}";
     }
 }
